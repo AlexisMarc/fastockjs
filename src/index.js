@@ -3,12 +3,25 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import Cargo from './Components/usuario/Cargo';
+// import Categoria from './Components/producto/Categoria';
+// import Entradapro from './Components/inventario/producto/Entradapro';
+// import Salidapro from './Components/inventario/producto/Salidapro'
+// import Producto from './Components/producto/Producto'
+// import Entrada from './Components/inventario/insumo/Entrada'
+// import Inventario from './Components/inventario/insumo/Inventario'
+import Inventariopro from './Components/inventario/producto/Inventariopro';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <Usuari />
+    
+    {/* <Entradapro /> */}
+    {/* <Categoria /> */}
+    {/* <Salidapro/> */}
+    {/* <Producto/> */}
+    {/* <Entrada/> */}
+    {/* <Inventario/> */}
+    <Inventariopro/>
   </React.StrictMode>
 );
 
