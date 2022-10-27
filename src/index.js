@@ -3,12 +3,18 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import Cargo from './Components/usuario/Cargo';
+import Empresa from './Components/empresa/Empresa';
+import Especialidad from './Components/empresa/Especialidad';
+import Tipo from './Components/insumo/Tipo';
+import Salida from './Components/inventario/insumo/Salida';
+
+import Proveedor from './Components/proveedor/Proveedor';
+import Insumo from './Components/insumo/Insumo';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <Usuari />
+    <Especialidad/>
   </React.StrictMode>
 );
 
