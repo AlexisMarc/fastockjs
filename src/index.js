@@ -4,11 +4,15 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import Cargo from './Components/usuario/Cargo';
+import Usuario from './Components/usuario/Usuario';
+import Produccion from './Components/fabricacion/Produccion';
+import Fabricacion from './Components/fabricacion/Fabricacion';
+import Area from './Components/fabricacion/Area';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <Usuari />
+    <Usuario/>
   </React.StrictMode>
 );
 
