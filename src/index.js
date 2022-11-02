@@ -7,14 +7,23 @@ import Empresa from './Components/empresa/Empresa';
 import Especialidad from './Components/empresa/Especialidad';
 import Tipo from './Components/insumo/Tipo';
 import Salida from './Components/inventario/insumo/Salida';
-
 import Proveedor from './Components/proveedor/Proveedor';
 import Insumo from './Components/insumo/Insumo';
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+  
+    const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <Especialidad/>
+    <BrowserRouter>
+              <Routes>
+              <Route path='/empresa' element={<Empresa/>}/>
+              <Route path='/especialidad' element={<Especialidad/>}/>
+              <Route path='/tipo' element={<Tipo/>}/>
+              <Route path='/salida' element={<Salida/>}/>
+              <Route path='/proveedor' element={<Proveedor/>}/>
+              <Route path='/insumo' element={<Insumo/>}/>
+              </Routes>
+    </BrowserRouter>
   </React.StrictMode>
 );
 
