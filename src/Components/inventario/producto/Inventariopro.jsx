@@ -85,7 +85,7 @@ class Inventario extends Component {
         return (
             <div className="App" >
                 <br />
-                <button className='btn btn-success' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertar() }}>Agregar Inventario</button>
+                <button className='btn btn-success' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertar() }}>Agregar Inventariopro</button>
                 <br />
                 <br />
                 <table className='table'>
