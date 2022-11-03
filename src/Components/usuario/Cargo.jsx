@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
-const url =  "http://localhost:8083/api/categoria";
+const url =  "http://localhost:8083/api/cargo";
 
 
 
@@ -24,7 +24,7 @@ class Cargo extends Component {
 
   peticionGet = () => {
     axios.get(url).then(response => {
-      this.setState({ data: response.data });
+      this.setState({ data: response.data.content});
     }).catch(error => {
       console.log(error.message);
     })
@@ -42,6 +42,26 @@ class Cargo extends Component {
     })
     
   }
+
+  peticionPut = () => {
+    axios.put(url + this.state.form.id, this.state.form).then(response => {
+        this.modalInsertar();
+        this.peticionGet();
+    })
+}
+
+  seleccionarCargo = (cargo) => {
+    this.setState({
+        tipoModal: 'actualizar',
+        form: {
+            id: cargo.id,
+            nombre: cargo.nombre,
+            descripcion: cargo.descripcion,
+            producto: cargo.producto,
+            acciones: cargo.acciones
+        }
+    })
+}
 
   modalInsertar = () => {
     this.setState({ modalInsertar: !this.state.modalInsertar });
@@ -65,9 +85,9 @@ class Cargo extends Component {
   render() {
     const{form} = this.state;
     return (
-      <div className="App" >
+      <div className="Categoria" >
         <br />
-        <button className='btn btn-success' onClick={() => this.modalInsertar()}>Agregar Categoria</button>
+        <button className='btn btn-success' onClick={() => this.modalInsertar()}>Agregar Cargo</button>
         <br />
         <br />
         <table className='table'>
@@ -76,20 +96,18 @@ class Cargo extends Component {
               <th>Id</th>
               <th>Nombre</th>
               <th>Descripción</th>
-              <th>Producto</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {this.state.data.map(categoria => {
+            {this.state.data.map(cargo => {
               return (
                 <tr>
-                  <td>{categoria.id}</td>
-                  <td>{categoria.nombre}</td>
-                  <td>{categoria.descripcion}</td>
-                  <td>{categoria.producto}</td>
+                  <td>{cargo.id}</td>
+                  <td>{cargo.nombre}</td>
+                  <td>{cargo.descripcion}</td>
                   <td>
-                    <button className='btn btn-primary'><FontAwesomeIcon icon={faEdit} /></button>
+                  <button className='btn btn-primary' onClick={() => { this.seleccionarCargo(cargo); this.modalInsertar() }}><FontAwesomeIcon icon={faEdit} /></button> 
                     {" "}
                     <button className='btn btn-danger'><FontAwesomeIcon icon={faTrashAlt} /></button>
                   </td>
