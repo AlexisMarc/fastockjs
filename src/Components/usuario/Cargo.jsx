@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { Component } from 'react';
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -152,3 +153,5 @@ class Cargo extends Component {
 }
 
 export default Cargo;
+=======
+>>>>>>> origin/apise

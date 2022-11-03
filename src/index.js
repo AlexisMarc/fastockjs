@@ -19,7 +19,13 @@ import Tipo from './Components/insumo/Tipo';
 import Salida from './Components/inventario/insumo/Salida';
 import Proveedor from './Components/proveedor/Proveedor';
 import Insumo from './Components/insumo/Insumo';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import Entradapro from './Components/inventario/producto/Entradapro';
+import Categoria from './Components/producto/Categoria';
+import Salidapro from './Components/inventario/producto/Salidapro'
+import Producto from './Components/producto/Producto'
+import Entrada from './Components/inventario/insumo/Entrada'
+import Inventario from './Components/inventario/insumo/Inventario'
+import Inventariopro from './Components/inventario/producto/Inventariopro';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -37,6 +43,13 @@ root.render(
         <Route path='produccion' element={<Produccion />} />
         <Route path='fabricacion' element={<Fabricacion />} />
         <Route path='area' element={<Area />} />
+        <Route path='/entradapro' element={<Entradapro />} />
+        <Route path='/categoria' element={<Categoria />} />
+        <Route path='/salidapro' element={<Salidapro />} />
+        <Route path='/producto' element={<Producto />} />
+        <Route path='entrada' element={<Entrada />} />
+        <Route path='/inventario' element={<Inventario />} />
+        <Route path='/inventariopro' element={<Inventariopro />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
