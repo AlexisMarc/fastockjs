@@ -1,3 +1,4 @@
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
@@ -13,12 +14,6 @@ import Tipo from './Components/insumo/Tipo';
 import Salida from './Components/inventario/insumo/Salida';
 import Proveedor from './Components/proveedor/Proveedor';
 import Insumo from './Components/insumo/Insumo';
-import Empresa from './Components/empresa/Empresa';
-import Especialidad from './Components/empresa/Especialidad';
-import Tipo from './Components/insumo/Tipo';
-import Salida from './Components/inventario/insumo/Salida';
-import Proveedor from './Components/proveedor/Proveedor';
-import Insumo from './Components/insumo/Insumo';
 import Entradapro from './Components/inventario/producto/Entradapro';
 import Categoria from './Components/producto/Categoria';
 import Salidapro from './Components/inventario/producto/Salidapro'
@@ -26,12 +21,20 @@ import Producto from './Components/producto/Producto'
 import Entrada from './Components/inventario/insumo/Entrada'
 import Inventario from './Components/inventario/insumo/Inventario'
 import Inventariopro from './Components/inventario/producto/Inventariopro';
+import Footer from './layouts/footer/Footer';
+import Menu from './layouts/menu/Menu';
+import Panel from './layouts/panel/Panel';
+import Nav from './layouts/nav/Nav';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
+        <Route path='/footer' element={<Footer />}/>
+        <Route path='/' element={<Menu />}/>
+        <Route path='/nav' element={<Nav />}/>
+        <Route path='/panel' element={<Panel />} />
         <Route path='/empresa' element={<Empresa />} />
         <Route path='/especialidad' element={<Especialidad />} />
         <Route path='/tipo' element={<Tipo />} />

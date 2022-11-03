@@ -154,7 +154,7 @@ class Salidapro extends Component {
                     </ModalBody>
 
                     <ModalFooter>
-                        {this.state.tipoModal == 'insertar' ?
+                        {this.state.tipoModal === 'insertar' ?
                             <button className='btn btn-success' onClick={() => this.peticionPost()}>
                                 Insertar
                             </button> : <button className='btn btn-primary' onClick={() => this.peticionPut()}>
