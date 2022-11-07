@@ -2,7 +2,6 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import reportWebVitals from './reportWebVitals';
 import Cargo from './Components/usuario/Cargo';
 import Usuario from './Components/usuario/Usuario';
 import Produccion from './Components/fabricacion/Produccion';
@@ -25,14 +24,17 @@ import Footer from './layouts/footer/Footer';
 import Menu from './layouts/menu/Menu';
 import Panel from './layouts/panel/Panel';
 import Nav from './layouts/nav/Nav';
+import Login from './Components/Public/Login';
+import Prueba from './Pages/Prueba';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
     <BrowserRouter>
       <Routes>
+        <Route path='/login' element={ <Login /> }/>
         <Route path='/footer' element={<Footer />}/>
-        <Route path='/' element={<Menu />}/>
+        <Route path='/menu' element={<Menu />}/>
+        <Route path='/' element={<Prueba />}/>
         <Route path='/nav' element={<Nav />}/>
         <Route path='/panel' element={<Panel />} />
         <Route path='/empresa' element={<Empresa />} />
@@ -55,10 +57,4 @@ root.render(
         <Route path='/inventariopro' element={<Inventariopro />} />
       </Routes>
     </BrowserRouter>
-  </React.StrictMode>
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();

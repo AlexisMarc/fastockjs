@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import axios from "axios";
-import "bootstrap/dist/css/bootstrap.min.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
@@ -97,7 +96,7 @@ class Empresa extends Component {
         return (
             <div className="App" >
                 <br />
-                <button className='btn btn-success' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertar() }}>Agregar Empresa</button>
+                <button className='btn btn-primary' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertar() }}>Agregar Empresa</button>
                 <br />
                 <br />
                 <table className='table'>
@@ -172,7 +171,7 @@ class Empresa extends Component {
 
                     <ModalFooter>
                         {this.state.tipoModal === 'insertar' ?
-                            <button className='btn btn-success' onClick={() => this.peticionPost()}>
+                            <button className='btn btn-primary' onClick={() => this.peticionPost()}>
                                 Insertar
                             </button> : <button className='btn btn-primary' onClick={() => this.peticionPut()}>
                                 Actualizar

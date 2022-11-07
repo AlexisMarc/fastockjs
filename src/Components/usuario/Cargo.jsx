@@ -1,7 +1,7 @@
 
 import React, { Component } from 'react';
 import axios from "axios";
-import "bootstrap/dist/css/bootstrap.min.css";
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
@@ -88,7 +88,7 @@ class Cargo extends Component {
     return (
       <div className="Categoria" >
         <br />
-        <button className='btn btn-success' onClick={() => this.modalInsertar()}>Agregar Cargo</button>
+        <button className='btn btn-primary' onClick={() => this.modalInsertar()}>Agregar Cargo</button>
         <br />
         <br />
         <table className='table'>
@@ -138,7 +138,7 @@ class Cargo extends Component {
           </ModalBody>
 
           <ModalFooter>
-            <button className='btn btn-success' onClick={() => this.peticionPost()}>
+            <button className='btn btn-primary' onClick={() => this.peticionPost()}>
               Insertar
             </button>
 

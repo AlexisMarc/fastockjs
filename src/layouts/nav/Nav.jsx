@@ -1,16 +1,12 @@
 import React, { Component } from 'react'
-import '../../static/css/styles.css'
-import face28 from '../../static/images/faces/face28.jpg';
-import Logo from '../../static/images/logo.svg';
-import Logomini from '../../static/images/logo-mini.svg';
 function Nav() {
-    return(
+    return (
         <nav className="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
             <div className="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
-                <a className="navbar-brand brand-logo mr-5" href="index.html"><img src={Logo} className="mr-2"
-                        alt="logo" /></a>
-                <a className="navbar-brand brand-logo-mini" href="index.html"><img src={Logomini}
-                        alt="logo" /></a>
+                <a className="navbar-brand brand-logo mr-5" href="/"><img src="../static/images/logo.jpg" className="mr-2"
+                    alt="logo" /></a>
+                <a className="navbar-brand brand-logo-mini" href="/"><img src="../static/images/logo-mini.jpg"
+                    alt="logo" /></a>
             </div>
             <div className="navbar-menu-wrapper d-flex align-items-center justify-content-end">
                 <button className="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
@@ -25,7 +21,7 @@ function Nav() {
                                 </span>
                             </div>
                             <input type="text" className="form-control" id="navbar-search-input" placeholder="Search now"
-                                aria-label="search" aria-describedby="search"/>
+                                aria-label="search" aria-describedby="search" />
                         </div>
                     </li>
                 </ul>
@@ -82,7 +78,7 @@ function Nav() {
                     </li>
                     <li className="nav-item nav-profile dropdown">
                         <a className="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
-                            <img src={face28} alt="profile" />
+                            <img src="../static/images/faces/face28.jpg" alt="profile" />
                         </a>
                         <div className="dropdown-menu dropdown-menu-right navbar-dropdown"
                             aria-labelledby="profileDropdown">
