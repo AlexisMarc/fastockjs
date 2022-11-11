@@ -13,21 +13,19 @@ class Empresa extends Component {
     state = {
         data: [],
         modalInsertar: false,
-        form: {
-            id: '',
+        empresa: {
+            nombre: '',
             contacto: '',
-            direccion: '', 
+            telefono: 0,
+            direccion: '',
             email: '',
-            estado: '', 
-            nombre: '', 
-            telefono: '', 
-            especialidad_id: '',
-            tipoModal: ''
+            imagen: '',
+            especialidad: 0
         }
     }
 
 
-    peticionGet = () => {
+    peticionGetEmpresa = () => {
         axios.get(url).then(response => {
             this.setState({ data: response.data.content });
         }).catch(error => {
@@ -35,7 +33,7 @@ class Empresa extends Component {
         })
     }
 
-    peticionPost = async () => {
+    peticionPostEmpresa = async () => {
 
         delete this.state.form.id;
         await axios.post(url, this.state.form).then(response => {
@@ -47,36 +45,34 @@ class Empresa extends Component {
         })
 
     }
-    peticionPut = () => {
+    peticionPutEmpresa = () => {
         axios.put(url + this.state.form.id, this.state.form).then(response => {
             this.modalInsertar();
             this.peticionGet();
         })
     }
-    modalInsertar = () => {
+    modalInsertarEmpresa = () => {
         this.setState({ modalInsertar: !this.state.modalInsertar });
     }
     seleccionarEmpresa = (empresa) => {
         this.setState({
             tipoModal: 'actualizar',
             form: {
-                id: empresa.id,
+                nombre: empresa.nombre,
                 contacto: empresa.contacto,
+                telefono: empresa.telefono,
                 direccion: empresa.direccion,
                 email: empresa.email,
-                estado: empresa.estado,
-                nombre: empresa.nombre,
-                telefono: empresa.telefono,
-                especialidad_id: empresa.especialidad_id,
-                identificacion: empresa.identificacion
+                imagen: empresa.imagen,
+                especialidad: empresa.especialidad
             }
         })
     }
-    modalInsertar = () => {
+    modalInsertarEmpresa = () => {
         this.setState({ modalInsertar: !this.state.modalInsertar });
     }
 
-    handleChange = async e => {
+    handleChangeEmpresa = async e => {
         e.persist();
         await this.setState({
             form: {
@@ -87,7 +83,7 @@ class Empresa extends Component {
         console.log(this.state.form);
     }
 
-    componentDidMount() {
+    componentDidMountEmpresa() {
         this.peticionGet();
     }
 
@@ -96,20 +92,19 @@ class Empresa extends Component {
         return (
             <div className="App" >
                 <br />
-                <button className='btn btn-primary' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertar() }}>Agregar Empresa</button>
+                <button className='btn btn-primary' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertarEmpresa() }}>Agregar Empresa</button>
                 <br />
                 <br />
                 <table className='table'>
                     <thead>
                         <tr>
-                            <th>Id</th>
+                            <th>nombre</th>
                             <th>contacto</th>
+                            <th>telefono</th>
                             <th>direccion</th>
                             <th>email</th>
-                            <th>estado</th>
-                            <th>nombre</th>
-                            <th>telefono</th>
-                            <th>especialidad_id</th>
+                            <th>imagen</th>
+                            <th>especialidad</th>
                             <th>Acciones</th>
 
                         </tr>
@@ -118,16 +113,15 @@ class Empresa extends Component {
                         {this.state.data.map(empresa => {
                             return (
                                 <tr>
-                                    <td>{empresa.id}</td>
+                                <td>{empresa.nombre}</td>
                                     <td>{empresa.contacto}</td>
+                                    <td>{empresa.telefono}</td>
                                     <td>{empresa.direccion}</td>
                                     <td>{empresa.email}</td>
-                                    <td>{empresa.estado}</td>
-                                    <td>{empresa.nombre}</td>
-                                    <td>{empresa.telefono}</td>
-                                    <td>{empresa.especialidad_id}</td>
+                                    <td>{empresa.imagen}</td>
+                                    <td>{empresa.especialidad}</td>
                                     <td>
-                                    <button className='btn btn-primary' onClick={() => { this.seleccionarEmpresa(empresa); this.modalInsertar() }}><FontAwesomeIcon icon={faEdit} /></button>
+                                    <button className='btn btn-primary' onClick={() => { this.seleccionarEmpresa(empresa); this.modalInsertarEmpresa() }}><FontAwesomeIcon icon={faEdit} /></button>
                                         {" "}
                                         <button className='btn btn-danger'><FontAwesomeIcon icon={faTrashAlt} /></button>
                                     </td>
@@ -140,30 +134,31 @@ class Empresa extends Component {
 
                 <Modal isOpen={this.state.modalInsertar}>
                     <ModalHeader style={{ display: "block" }}>
-                        <span style={{ float: 'righ' }} >x</span>
+                        <span style={{ float: 'righ' }} >Nueva empresa</span>
                     </ModalHeader>
 
                     <ModalBody>
                         <div className="form-group">
-                            <label htmlFor="id">ID</label>
-                            <input className="form-control" type="number" name="id" id="id" readOnly onChange={this.handleChange} value={form ? form.id : this.state.data.length + 1} />
-                            <br />
+                        <label htmlFor='nombre'>nombre</label>
+                            <input className='form-control' type='text' name='nombre' id='nombre' onChange={this.handleChange} value={form ? form.nombre: ''} />
+                            
                             <label htmlFor="contacto">contacto</label>
                             <input className="form-control" type="text" name='contacto' id='contacto' onChange={this.handleChange} value={form ? form.contacto: ''} />
-                            <div />
+                            
+                            <label htmlFor='telefono'>telefono</label>
+                            <input className='form-control' type='text' name='telefono' id='telefono' onChange={this.handleChange} value={form ? form.telefono:''} />
+                            
                             <label htmlFor='direccion'>direccion</label>
                             <input className='form-control' type='text' name='direccion' id='direccion' onChange={this.handleChange} value={form ? form.direccion: ''} />
                             <label htmlFor='email'>email</label>
                             <input className='form-control' type='text' name='email' id='email' onChange={this.handleChange} value={form ? form.email: ''} />
-                            <label htmlFor='estado'>estado</label>
-                            <input className='form-control' type='text' name='estado' id='estado' onChange={this.handleChange} value={form ? form.estado: ''} />
-                            <label htmlFor='nombre'>nombre</label>
-                            <input className='form-control' type='text' name='nombre' id='nombre' onChange={this.handleChange} value={form ? form.nombre: ''} />
-                            <label htmlFor='telefono'>telefono</label>
-                            <input className='form-control' type='text' name='telefono' id='telefono' onChange={this.handleChange} value={form ? form.telefono:''} />
-                            {/* <label htmlFor='especialidad_id'>especialidad_id</label>
+                            <label htmlFor='imagen'>imagen</label>
+                            <input className='form-control' type='text' name='imagen' id='imagen' onChange={this.handleChange} value={form ? form.imagen: ''} />
+                            <label htmlFor='especialidad'>especialidad</label>
+                            <input className='form-control' type='text' name='especialidad' id='especialidad' onChange={this.handleChange} value={form ? form.especialidad: ''} />
+                         
+                          {/* <label htmlFor='especialidad_id'>especialidad_id</label>
                             <input className='form-control' type='text' name='especialidad_id' id='especialidad_id' onChange={this.handleChange} value={form ? form.especialidad_id:''} /> */}
-                        
                         
                             
                         </div>
@@ -171,13 +166,13 @@ class Empresa extends Component {
 
                     <ModalFooter>
                         {this.state.tipoModal === 'insertar' ?
-                            <button className='btn btn-primary' onClick={() => this.peticionPost()}>
+                            <button className='btn btn-primary' onClick={() => this.peticionPostEmpresa()}>
                                 Insertar
-                            </button> : <button className='btn btn-primary' onClick={() => this.peticionPut()}>
+                            </button> : <button className='btn btn-primary' onClick={() => this.peticionPutEmpresa()}>
                                 Actualizar
                             </button>
                         }
-                        <button className='btn btn-danger' onClick={() => this.modalInsertar()}>
+                        <button className='btn btn-danger' onClick={() => this.modalInsertarEmpresa()}>
                             Cancelar
                         </button>
                     </ModalFooter>

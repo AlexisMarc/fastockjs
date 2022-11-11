@@ -13,16 +13,16 @@ class Tipo extends Component {
 
     state = {
         data: [],
-        modalInsertar: false,
+        modalInsertarTipoTipo: false,
         form: {
-            id: '',
-            nombre: '',
-            descripcion: ''
+            nombre:'',
+            descripcion: '',
+            filtro: ''
         }
     }
 
 
-    peticionGet = () => {
+    peticionGetTipo= () => {
         axios.get(url).then(response => {
             this.setState({ data: response.data});
         }).catch(error => {
@@ -30,39 +30,37 @@ class Tipo extends Component {
         })
     }
 
-    peticionPost = async () => {
+    peticionPostTipo = async () => {
 
         delete this.state.form.id;
         await axios.post(url, this.state.form).then(response => {
-            this.modalInsertar();
-            this.peticionGet();
+            this.modalInsertarTipo();
+            this.peticionGetTipo();
 
         }).catch(error => {
             console.log(error.message);
         })
     }
-    peticionPut = () => {
+    peticionPutTipo = () => {
         axios.put(url + this.state.form.id, this.state.form).then(response => {
-            this.modalInsertar();
-            this.peticionGet();
+            this.modalInsertarTipo();
+            this.peticionGetTipo();
         })
     }
-    modalInsertar = () => {
-        this.setState({ modalInsertar: !this.state.modalInsertar });
+    modalInsertarTipo = () => {
+        this.setState({ modalInsertarTipo: !this.state.modalInsertarTipo });
     }
     seleccionarTipo = (tipo) => {
         this.setState({
             tipoModal: 'actualizar',
             form: {
-                id: tipo.id,
-                descripción: tipo.descripcion,
-                estado: tipo.estado,
                 nombre: tipo.nombre,
-                identificacion: tipo.identificacion
+                descripción: tipo.descripcion,
+                filtro: tipo.filtro
             }
         })
     }
-    handleChange = async e => {
+    handleChangeTipo = async e => {
         e.persist();
         await this.setState({
             form: {
@@ -73,8 +71,8 @@ class Tipo extends Component {
         console.log(this.state.form);
     }
 
-    componentDidMount() {
-        this.peticionGet();
+    componentDidMountTipo() {
+        this.peticionGetTipo();
     }
 
     render() {
@@ -82,16 +80,15 @@ class Tipo extends Component {
         return (
             <div className="App" >
                 <br />
-                <button className='btn btn-primary' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertar() }}>Agregar Tipo</button>
+                <button className='btn btn-primary' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertarTipo() }}>Agregar Tipo</button>
                 <br />
                 <br />
                 <table className='table'>
                     <thead>
                         <tr>
-                            <th>Id</th>
-                            <th>Descripción</th>
-                            <th>estado</th>
                             <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Filtro</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -99,12 +96,11 @@ class Tipo extends Component {
                         {this.state.data.map(tipo => {
                             return (
                                 <tr>
-                                    <td>{tipo.id}</td>
-                                    <td>{tipo.descripcion}</td>
-                                    <td>{tipo.estado}</td>
                                     <td>{tipo.nombre}</td>
+                                    <td>{tipo.descripcion}</td>
+                                    <td>{tipo.filtro}</td>
                                     <td>
-                                    <button className='btn btn-primary' onClick={() => { this.seleccionarTipo(tipo); this.modalInsertar() }}><FontAwesomeIcon icon={faEdit} /></button>
+                                    <button className='btn btn-primary' onClick={() => { this.seleccionarTipo(tipo); this.modalInsertarTipo() }}><FontAwesomeIcon icon={faEdit} /></button>
                                         {" "}
                                         <button className='btn btn-danger'><FontAwesomeIcon icon={faTrashAlt} /></button>
                                     </td>
@@ -115,33 +111,32 @@ class Tipo extends Component {
                 </table>
 
 
-                <Modal isOpen={this.state.modalInsertar}>
+                <Modal isOpen={this.state.modalInsertarTipo}>
                     <ModalHeader style={{ display: "block" }}>
                         <span style={{ float: 'righ' }} >x</span>
                     </ModalHeader>
 
                     <ModalBody>
                         <div className="form-group">
-                            <label htmlFor="id">ID</label>
-                            <input className="form-control" type="number" name="id" id="id" readOnly onChange={this.handleChange} value={form ? form.id : this.state.data.length + 1} />
-                            <br />
                             <label htmlFor="nombre">Nombre</label>
-                            <input className="form-control" type="text" name='nombre' id='nombre' onChange={this.handleChange} value={form ? form.nombre:''} />
+                            <input className="form-control" type="text" name='nombre' id='nombre' onChange={this.handleChangeTipo} value={form ? form.nombre:''} />
                             <div />
                             <label htmlFor='descripcion'>Descripción</label>
-                            <input className='form-control' type='text' name='descripcion' id='descripcion' onChange={this.handleChange} value={form ? form.descripcion:''} />
+                            <input className='form-control' type='text' name='descripcion' id='descripcion' onChange={this.handleChangeTipo} value={form ? form.descripcion:''} />
+                            <label htmlFor='filtro'>filtro</label>
+                            <input className='form-control' type='text' name='filtro' id='filtro' onChange={this.handleChangeTipo} value={form ? form.filtro:''} />
                         </div>
                     </ModalBody>
 
                     <ModalFooter>
                         {this.state.tipoModal === 'insertar' ?
-                            <button className='btn btn-primary' onClick={() => this.peticionPost()}>
+                            <button className='btn btn-primary' onClick={() => this.peticionPostTipo()}>
                                 Insertar
-                            </button> : <button className='btn btn-primary' onClick={() => this.peticionPut()}>
+                            </button> : <button className='btn btn-primary' onClick={() => this.peticionPutTipo()}>
                                 Actualizar
                             </button>
                         }
-                        <button className='btn btn-danger' onClick={() => this.modalInsertar()}>
+                        <button className='btn btn-danger' onClick={() => this.modalInsertarTipo()}>
                             Cancelar
                         </button>
                     </ModalFooter>

@@ -11,17 +11,16 @@ class Categoria extends Component {
 
     state = {
         data: [],
-        modalInsertar: false,
-        form: {
-            id: '',
+        modalInsertarCategoria: false,
+        categoria: {
             nombre: '',
             descripcion: '',
-            tipoModal: ''
+            filtro: ''
         }
     }
 
 
-    peticionGet = () => {
+    peticionGetCategoria = () => {
         axios.get(url).then(response => {
             this.setState({ data: response.data });
         }).catch(error => {
@@ -29,12 +28,12 @@ class Categoria extends Component {
         })
     }
 
-    peticionPost = async () => {
+    peticionPostCategoria = async () => {
 
-        delete this.state.form.id;
-        await axios.post(url, this.state.form).then(response => {
-            this.modalInsertar();
-            this.peticionGet();
+        delete this.state.categoria.id;
+        await axios.post(url, this.state.categoria).then(response => {
+            this.modalInsertarCategoria();
+            this.peticionGetCategoria();
 
         }).catch(error => {
             console.log(error.message);
@@ -42,58 +41,58 @@ class Categoria extends Component {
 
     }
 
-    peticionPut = () => {
-        axios.put(url + this.state.form.id, this.state.form).then(response => {
-            this.modalInsertar();
-            this.peticionGet();
+    peticionPutCategoria = () => {
+        axios.put(url + this.state.categoria.id, this.state.categoria).then(response => {
+            this.modalInsertarCategoria();
+            this.peticionGetCategoria();
         })
     }
 
-    modalInsertar = () => {
-        this.setState({ modalInsertar: !this.state.modalInsertar });
+    modalInsertarCategoria = () => {
+        this.setState({ modalInsertarCategoria: !this.state.modalInsertarCategoria });
     }
 
-    seleccionarEmpresa = (categoria) => {
+    seleccionarCategoria = (categoria) => {
         this.setState({
             tipoModal: 'actualiza',
-            form: {
-                id: categoria.id,
+            categoria: {
                 nombre: categoria.nombre,
-                descripcion: categoria.descripcion
+                descripcion: categoria.descripcion,
+                filtro: categoria.filtro
+                
             }
         })
     }
 
-    handleChange = async e => {
+    handleChangeCategoria = async e => {
         e.persist();
         await this.setState({
-            form: {
-                ...this.state.form,
+            categoria: {
+                ...this.state.categoria,
                 [e.target.name]: e.target.value
             }
         });
-        console.log(this.state.form);
+        console.log(this.state.categoria);
     }
 
-    componentDidMount() {
-        this.peticionGet();
+    componentDidMountCategoria() {
+        this.peticionGetCategoria();
     }
 
     render() {
-        const { form } = this.state;
+        const { categoria } = this.state;
         return (
             <div className="App" >
                 <br />
-                <button className='btn btn-primary' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertar() }}>Agregar Categoria</button>
+                <button className='btn btn-primary' onClick={() => { this.setState({ categoria: null, tipoModal: 'insertar' }); this.modalInsertarCategoria() }}>Agregar Categoria</button>
                 <br />
                 <br />
                 <table className='table'>
                     <thead>
                         <tr>
-                            <th>Id</th>
                             <th>Nombre</th>
                             <th>Descripción</th>
-                            <th>Producto</th>
+                            <th>Filtro</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -101,12 +100,11 @@ class Categoria extends Component {
                         {this.state.data.map(categoria => {
                             return (
                                 <tr>
-                                    <td>{categoria.id}</td>
                                     <td>{categoria.nombre}</td>
                                     <td>{categoria.descripcion}</td>
-                                    <td>{categoria.producto}</td>
+                                    <td>{categoria.filtro}</td>
                                     <td>
-                                        <button className='btn btn-primary' onClick={() => { this.seleccionarEmpresa(categoria); this.modalInsertar() }}><FontAwesomeIcon icon={faEdit} /></button>
+                                        <button className='btn btn-primary' onClick={() => { this.seleccionarCategoria(categoria); this.modalInsertarCategoria() }}><FontAwesomeIcon icon={faEdit} /></button>
                                         {" "}
                                         <button className='btn btn-danger'><FontAwesomeIcon icon={faTrashAlt} /></button>
                                     </td>
@@ -117,33 +115,32 @@ class Categoria extends Component {
                 </table>
 
 
-                <Modal isOpen={this.state.modalInsertar}>
+                <Modal isOpen={this.state.modalInsertarCategoria}>
                     <ModalHeader style={{ display: "block" }}>
-                        <span style={{ float: 'righ' }} >x</span>
+                        <span style={{ float: 'righ' }} >nueva categoría</span>
                     </ModalHeader>
 
                     <ModalBody>
                         <div className="form-group">
-                            <label htmlFor="id">ID</label>
-                            <input className="form-control" type="number" name="id" id="id" readOnly onChange={this.handleChange} value={form ? form.id : this.state.data.length + 1} />
-                            <br />
                             <label htmlFor="nombre">Nombre</label>
-                            <input className="form-control" type="text" name='nombre' id='nombre' onChange={this.handleChange} value={form ? form.nombre : ''} />
+                            <input className="form-control" type="text" name='nombre' id='nombre' onChange={this.handleChangeCategoria} value={categoria ? categoria.nombre : ''} />
                             <div />
                             <label htmlFor='descripcion'>Descripción</label>
-                            <input className='form-control' type='text' name='descripcion' id='descripcion' onChange={this.handleChange} value={form ? form.descripcion : ''} />
+                            <input className='form-control' type='text' name='descripcion' id='descripcion' onChange={this.handleChangeCategoria} value={categoria ? categoria.descripcion : ''} />
+                            <label htmlFor='filtro'>Filtro</label>
+                            <input className='form-control' type='text' name='filtro' id='filtro' onChange={this.handleChangeCategoria} value={categoria ? categoria.descripcion : ''} />
                         </div>
                     </ModalBody>
 
                     <ModalFooter>
                         {this.state.tipoModal === 'insertar' ?
-                            <button className='btn btn-primary' onClick={() => this.peticionPost()}>
+                            <button className='btn btn-primary' onClick={() => this.peticionPostCategoria()}>
                                 Insertar
-                            </button> : <button className='btn btn-primary' onClick={() => this.peticionPut()}>
+                            </button> : <button className='btn btn-primary' onClick={() => this.peticionPutCategoria()}>
                                 Actualizar
                             </button>
                         }
-                        <button className='btn btn-danger' onClick={() => this.modalInsertar()}>
+                        <button className='btn btn-danger' onClick={() => this.modalInsertarCategoria()}>
                             Cancelar
                         </button>
                     </ModalFooter>

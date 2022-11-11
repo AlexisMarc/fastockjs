@@ -1,18 +1,15 @@
-import React, { Component } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCoffee } from '@fortawesome/free-solid-svg-icons';
-
-
+import { Link } from 'react-router-dom'
+import React from 'react'
 
 function Menu() {
     return (
         <nav className="sidebar sidebar-offcanvas" id="sidebar">
             <ul className="nav">
                 <li className="nav-item">
-                    <a className="nav-link" href="/">
+                    <Link className="nav-link" to="/">
                         <i className="ti-home menu-icon"></i>
                         <span className="menu-title">Inicio</span>
-                    </a>
+                    </Link>
                 </li>
                 <li className="nav-item">
                     <a className="nav-link" data-toggle="collapse" href="#fabricacion" aria-expanded="false"
@@ -23,17 +20,17 @@ function Menu() {
                     </a>
                     <div className="collapse" id="fabricacion">
                         <ul className="nav flex-column sub-menu">
-                            <li className="nav-item"> <a className="nav-link" href="/producto">Producto</a></li>
-                            <li className="nav-item"> <a className="nav-link" href="/insumo">Insumo</a></li>
-                            <li className="nav-item"> <a className="nav-link" href="/fabricacion">Fabricación</a></li>
+                        <li className="nav-item"><Link to="/producto" className="nav-link">Producto</Link></li>
+                        <li className="nav-item"><Link to="/insumo" className="nav-link">Insumo</Link></li>
+                        <li className="nav-item"><Link to="/fabricacion" className="nav-link">Fabricación</Link></li>
                         </ul>
                     </div>
                 </li>
                 <li className="nav-item">
-                    <a className="nav-link" href="/empleado">
+                    <Link className="nav-link" to="/usuario">
                         <i className="ti-user menu-icon"></i>
-                        <span className="menu-title">Empleado</span>
-                    </a>
+                        <span className="menu-title">Usuario</span>
+                    </Link>
                 </li>
                 <li className="nav-item">
                     <a className="nav-link" data-toggle="collapse" href="#entidad" aria-expanded="false"
@@ -44,8 +41,9 @@ function Menu() {
                     </a>
                     <div className="collapse" id="entidad">
                         <ul className="nav flex-column sub-menu">
-                            <li className="nav-item"> <a className="nav-link" href="/empresa">Empresa</a></li>
-                            <li className="nav-item"> <a className="nav-link" href="/proveedor">Proveedor</a></li>
+                        <li className="nav-item"><Link to="/empresa" className="nav-link">Empresa</Link></li>
+                        <li className="nav-item"><Link to="/proveedor" className="nav-link">Proveedor</Link></li>
+                            
                         </ul>
                     </div>
                 </li>
@@ -58,8 +56,8 @@ function Menu() {
                     </a>
                     <div className="collapse" id="inventario">
                         <ul className="nav flex-column sub-menu">
-                            <li className="nav-item"> <a className="nav-link" href="/inventariopro">Productos</a></li>
-                            <li className="nav-item"> <a className="nav-link" href="/inventario">Insumos</a></li>
+                            <li className="nav-item"><Link to="/inventariopro" className="nav-link">Productos</Link></li>
+                            <li className="nav-item"><Link to="/inventario" className="nav-link">Insumos</Link></li>
                         </ul>
                     </div>
                 </li>

@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
@@ -6,10 +8,15 @@ import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import { autorizacion, baseUrl } from '../../Utils/Api';
 import swal from 'sweetalert';
 
+import 'primeicons/primeicons.css';
+import 'primereact/resources/themes/lara-light-indigo/theme.css';
+import 'primereact/resources/primereact.css';
+import 'primeflex/primeflex.css';
+
 //URL PRINCIPAL
 const url = baseUrl + 'proveedor/';
 
-class proveedor extends Component {
+export default class DataTableResponsiveDemo extends Component {
 
     //DATOS
     state = {
@@ -131,50 +138,43 @@ class proveedor extends Component {
         this.peticionGetProveedor();
     }
 
-    //RENDERIZADO
+    constructor(props) {
+        super(props);
+        this.Botones = this.Botones.bind(this);
+
+    }
+
+    Botones(proveedor) {
+        return <div>
+            <button value={proveedor.id} className='btn btn-primary' onClick={() => { this.seleccionarProveedor(proveedor); this.modalEditarProveedor() }}><FontAwesomeIcon icon={faEdit} /></button>
+            {' '}
+            <button className='btn btn-danger' onClick={() => this.peticionEstadoProveedor(proveedor)}><FontAwesomeIcon icon={faTrashAlt} /></button>
+        </div>;
+    }
+
+
     render() {
-        const { form, editForm } = this.state;
+        const { form, editForm, data } = this.state;
         return (
-            <div className='App' >
+            <div>
                 <br />
-                <button className='btn btn-primary' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertarProveedor() }}>Agregar Proveedor</button>
+                <div style={{'display': 'flex','alignItems': 'end','justifyContent': 'end'}}>
+                    <button className='btn btn-primary' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertarProveedor() }}>Agregar Proveedor</button>
+                </div>
                 <br />
-                <br />
-                <table className='table'>
-                    <thead>
-                        <tr>
-                            <th>contacto</th>
-                            <th>direccion</th>
-                            <th>email</th>
-                            <th>nombre</th>
-                            <th>telefono</th>
-                            <th>Acciones</th>
+                <div className="card">
+                    <DataTable value={data} header="Proveedor" responsiveLayout="stack" breakpoint="800px" paginator rows={10}>
+                        <Column field="nombre" header="Nombre" sortable filter />
+                        <Column field="contacto" header="Contacto" sortable />
+                        <Column field="direccion" header="Dirección" sortable />
+                        <Column field="email" header="Email" sortable />
+                        <Column field="estado" header="Botones" body={this.Botones} />
 
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {this.state.data.map((proveedor, i) => {
-                            return (
-                                <tr key={i}>
-                                    <td>{proveedor.contacto}</td>
-                                    <td>{proveedor.direccion}</td>
-                                    <td>{proveedor.email}</td>
-                                    <td>{proveedor.nombre}</td>
-                                    <td>{proveedor.telefono}</td>
-                                    <td>
-                                        <button className='btn btn-primary' onClick={() => { this.seleccionarProveedor(proveedor); this.modalEditarProveedor() }}><FontAwesomeIcon icon={faEdit} /></button>
-                                        {' '}
-                                        <button className='btn btn-danger' onClick={() => this.peticionEstadoProveedor(proveedor)}><FontAwesomeIcon icon={faTrashAlt} /></button>
-                                    </td>
-                                </tr>
-                            )
-                        })}
-                    </tbody>
-                </table>
-
+                    </DataTable>
+                </div>
                 {/* MODAL DE EDITAR */}
                 <Modal isOpen={this.state.modalInsertarProveedor}>
-                    <ModalHeader >
+                    <ModalHeader>
                         <span>Agregar Proveedor</span>
                     </ModalHeader>
 
@@ -195,7 +195,6 @@ class proveedor extends Component {
                             <label htmlFor='telefono'>telefono</label>
                             <input className='form-control' type='text' name='telefono' id='telefono' onChange={this.handleChangeProveedor} />
                         </div>
-                        
                     </ModalBody>
 
                     <ModalFooter>
@@ -231,7 +230,7 @@ class proveedor extends Component {
                             <br />
                             <label htmlFor='email'>Email</label>
                             <input className='form-control' type='text' name='email' id='email' onChange={this.handleChangeEditProveedor} value={editForm.email || ''} />
-                            <br />
+
 
                         </div>
                     </ModalBody>
@@ -249,5 +248,3 @@ class proveedor extends Component {
         );
     }
 }
-
-export default proveedor;

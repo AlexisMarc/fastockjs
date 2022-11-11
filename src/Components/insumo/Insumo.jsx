@@ -14,19 +14,17 @@ class Insumo extends Component {
     state = {
         data: [],
         modalInsertar: false,
-        form: {
-            id: '',
-            descripcion: '',
-            estado: '', 
-            material: '',
+        insumo: {
             nombre: '',
-            proveedor_id: '',
-            telefono: ''
+            material: '',
+            imagen: '',
+            proveedor: 0,
+            tipo: 0
         }
     }
 
 
-    peticionGet = () => {
+    peticionGetInsumo = () => {
         axios.get(url).then(response => {
             this.setState({ data: response.data.content});
         }).catch(error => {
@@ -34,7 +32,7 @@ class Insumo extends Component {
         })
     }
 
-    peticionPost = async () => {
+    peticionPostInsumo = async () => {
 
         delete this.state.form.id;
         await axios.post(url, this.state.form).then(response => {
@@ -46,32 +44,31 @@ class Insumo extends Component {
         })
 
     }
-    peticionPut = () => {
+    peticionPutInsumo = () => {
         axios.put(url + this.state.form.id, this.state.form).then(response => {
             this.modalInsertar();
             this.peticionGet();
         })
     }
 
-    modalInsertar = () => {
+    modalInsertarInsumo = () => {
         this.setState({ modalInsertar: !this.state.modalInsertar });
     }
     seleccionarInsumo = (insumo) => {
         this.setState({
             tipoModal: 'actualizar',
             form: {
-                id: insumo.id,
-                descripcion: insumo.descripcion,
+                
                 nombre: insumo.nombre,
                 material: insumo.material,
-                estado: insumo.estado,
-                proveedor_id: insumo.proveedor_id,
-                identificacion: insumo.identificacion
+                imagen: insumo.imagen,
+                proveedor: insumo.proveedor,
+                tipo: insumo.tipo
             }
-        })
+        });
     }
 
-    handleChange = async e => {
+    handleChangeInsumo = async e => {
         e.persist();
         await this.setState({
             form: {
@@ -82,7 +79,7 @@ class Insumo extends Component {
         console.log(this.state.form);
     }
 
-    componentDidMount() {
+    componentDidMountInsumo() {
         this.peticionGet();
     }
 
@@ -91,18 +88,17 @@ class Insumo extends Component {
         return (
             <div className="App" >
                 <br />
-                <button className='btn btn-primary' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertar() }}>Agregar Insumo</button>
+                <button className='btn btn-primary' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertarInsumo() }}>Agregar Insumo</button>
                 <br />
                 <br />
                 <table className='table'>
                     <thead>
                         <tr>
-                            <th>Id</th>
-                            <th>descripcion</th>
                             <th>nombre</th>
                             <th>material</th>
-                            <th>estado</th>
-                            <th>proveedor_id</th>
+                            <th>imagen</th>
+                            <th>proveedor</th>
+                            <th>tipo</th>
                             <th>Acciones</th>
 
                         </tr>
@@ -111,15 +107,13 @@ class Insumo extends Component {
                         {this.state.data.map(insumo => {
                             return (
                                 <tr>
-                                    <td>{insumo.id}</td>
-                                    <td>{insumo.descripcion}</td>
                                     <td>{insumo.nombre}</td>
                                     <td>{insumo.material}</td>
-                                    <td>{insumo.estado}</td>
-                                    <td>{insumo.proveedor_id}</td>
-                                    <td>{insumo.telefono}</td>
+                                    <td>{insumo.imagen}</td>
+                                    <td>{insumo.proveedor}</td>
+                                    <td>{insumo.tipo}</td>
                                     <td>
-                                    <button className='btn btn-primary' onClick={() => { this.seleccionarInsumo(insumo); this.modalInsertar() }}><FontAwesomeIcon icon={faEdit} /></button>
+                                    <button className='btn btn-primary' onClick={() => { this.seleccionarInsumo(insumo); this.modalInsertarInsumo() }}><FontAwesomeIcon icon={faEdit} /></button>
                                         {" "}
                                         <button className='btn btn-danger'><FontAwesomeIcon icon={faTrashAlt} /></button>
                                     </td>
@@ -136,38 +130,32 @@ class Insumo extends Component {
                     </ModalHeader>
                     <ModalBody>
                         <div className="form-group">
-                            <label htmlFor="id">ID</label>
-                            <input className="form-control" type="number" name="id" id="id" readOnly onChange={this.handleChange} value={form ? form.id : this.state.data.length + 1} />
-                            <br />
-                            <label htmlFor="descripcion">descripcion</label>
-                            <input className="form-control" type="text" name='descripcion' id='descripcion' onChange={this.handleChange} value={form ? form.descripcion: ''} />
-                            <br />
                             <label htmlFor='nombre'>nombre</label>
                             <input className='form-control' type='text' name='nombre' id='nombre' onChange={this.handleChange} value={form ? form.nombre:''} />
                             <br />
                             <label htmlFor='material'>material</label>
                             <input className='form-control' type='text' name='material' id='material' onChange={this.handleChange} value={form ? form.material:''} />
                             <br />
-                            <label htmlFor='estado'>estado</label>
-                            <input className='form-control' type='text' name='estado' id='estado' onChange={this.handleChange} value={form ? form.estado: ''} />
+                            <label htmlFor='imagen'>imagen</label>
+                            <input className='form-control' type='text' name='imagen' id='imagen' onChange={this.handleChange} value={form ? form.imagen: ''} />
                             <br />
-                            <label htmlFor='proveedor_id'>proveedor_id</label>
-                            <input className='form-control' type='text' name='proveedor_id' id='proveedor_id' onChange={this.handleChange} value={form ? form.proveedor_id: ''} />
+                            <label htmlFor='proveedor'>proveedor</label>
+                            <input className='form-control' type='text' name='proveedor' id='proveedor' onChange={this.handleChange} value={form ? form.proveedor: ''} />
                             <br />
-                            <label htmlFor='telefono'>telefono</label>
-                            <input className='form-control' type='text' name='telefono' id='telefono' onChange={this.handleChange} value={form ? form.telefono: ''} />
+                            <label htmlFor='tipo'>tipo</label>
+                            <input className='form-control' type='text' name='tipo' id='tipo' onChange={this.handleChange} value={form ? form.tipo: ''} />
                         </div>
                     </ModalBody>
 
                     <ModalFooter>
                         {this.state.tipoModal === 'insertar' ?
-                            <button className='btn btn-primary' onClick={() => this.peticionPost()}>
+                            <button className='btn btn-primary' onClick={() => this.peticionPostInsumo()}>
                                 Insertar
-                            </button> : <button className='btn btn-primary' onClick={() => this.peticionPut()}>
+                            </button> : <button className='btn btn-primary' onClick={() => this.peticionPutInsumo()}>
                                 Actualizar
                             </button>
                         }
-                        <button className='btn btn-danger' onClick={() => this.modalInsertar()}>
+                        <button className='btn btn-danger' onClick={() => this.modalInsertarInsumo()}>
                             Cancelar
                         </button>
                     </ModalFooter>
