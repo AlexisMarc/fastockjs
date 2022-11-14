@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faLock } from '@fortawesome/free-solid-svg-icons';
+import swal from 'sweetalert';
 
 import "./css/main.css";
 import Cookies from 'universal-cookie';
@@ -15,7 +16,7 @@ class Login extends Component {
 
     state = {
         form: {
-            userName: '',
+            email: '',
             password: ''
         }
     }
@@ -33,7 +34,7 @@ class Login extends Component {
         await axios.post(url, this.state.form)
             .then(response => {
                 if (response.data.token) {
-                    alert("ingreso");
+                    swal("Estamos dentro!", "Programadores", "success");
                     var respuesta = response.data;
                     cookies.set('token', respuesta.token, { path: "/" });
                     axios.defaults.headers.common['Authorization'] = 'Bearer' + response.data.token;
@@ -71,7 +72,7 @@ class Login extends Component {
                             </span>
 
                             <div className="wrap-input100 validate-input" data-validate="Valid email is required: ex@abc.xyz">
-                                <input className="input100" type="text" name="userName" placeholder="userName" onChange={this.handleChange} />
+                                <input className="input100" type="text" name="email" placeholder="userName" onChange={this.handleChange} />
                                 <span className="focus-input100"></span>
                                 <span className="symbol-input100">
                                     <i className="fa fa-envelope" aria-hidden="true"><FontAwesomeIcon icon={faUser} /></i>
