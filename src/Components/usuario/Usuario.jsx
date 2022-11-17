@@ -4,6 +4,7 @@ import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit } from '@fortawesome/free-solid-svg-icons';
+import { autorizacion } from '../../Utils/Api';
 
 
 const url = "http://localhost:8083/api/usuario";
@@ -81,7 +82,7 @@ peticionPost = async () => {
 }
 
   peticionGet = () => (
-    axios.get(url).then(response => {
+    axios.get(url, autorizacion).then(response => {
       this.setState({ data: response.data });
     })
 
@@ -122,7 +123,7 @@ peticionPost = async () => {
                   <td>{usuario.apellido}</td>
                   <td>{usuario.direccion}</td>
                   <td>{usuario.email}</td>
-                  <td>{usuario.estado}</td>
+                  <td>{usuario.estado ? "Activo" : "Inactivo"}</td>
                   <td>{usuario.fecha}</td>
                   <td>{usuario.genero}</td>
                   <td>{usuario.identificacion}</td>

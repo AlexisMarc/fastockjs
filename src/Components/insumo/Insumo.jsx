@@ -1,74 +1,99 @@
 import React, { Component } from 'react';
-import axios from "axios";
-
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { InputText } from 'primereact/inputtext';
+import { FilterMatchMode } from 'primereact/api';
+import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
-
-const url = "http://localhost:8083/api/insumo";
-
-
-
-class Insumo extends Component {
-
-    state = {
-        data: [],
-        modalInsertar: false,
-        insumo: {
-            nombre: '',
-            material: '',
-            imagen: '',
-            proveedor: 0,
-            tipo: 0
-        }
-    }
+import { faClose, faEdit, faEye, faPlus, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { Col, FormFeedback, FormGroup, FormText, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
+import { autorizacion, baseUrl } from '../../Utils/Api';
+import swal from 'sweetalert';
 
 
-    peticionGetInsumo = () => {
-        axios.get(url).then(response => {
-            this.setState({ data: response.data.content});
+import 'primeicons/primeicons.css';
+import 'primereact/resources/themes/lara-light-indigo/theme.css';
+import 'primereact/resources/primereact.css';
+import 'primeflex/primeflex.css';
+
+//URL PRINCIPAL
+const url = baseUrl + 'proveedor/';
+
+export default class Insumo extends Component {
+
+    //DATOS
+    state = {}
+
+    //PETICIÓN GET
+    peticionGetProveedor = () => {
+        axios.get(url, autorizacion).then(response => {
+            this.setState({ data: response.data, loading: false });
         }).catch(error => {
             console.log(error.message);
         })
     }
 
-    peticionPostInsumo = async () => {
+    //PETICIÓN POST
+    peticionPostProveedor = async () => {
 
-        delete this.state.form.id;
-        await axios.post(url, this.state.form).then(response => {
-            this.modalInsertar();
-            this.peticionGet();
+        await axios.post(url, this.state.form, autorizacion).then(response => {
+            this.modalInsertarProveedor();
+            this.peticionGetProveedor();
 
         }).catch(error => {
             console.log(error.message);
         })
 
     }
-    peticionPutInsumo = () => {
-        axios.put(url + this.state.form.id, this.state.form).then(response => {
-            this.modalInsertar();
-            this.peticionGet();
+
+    //PETICIÓN PUT
+    peticionPutProveedor = () => {
+        axios.put(url + this.state.editForm.id, this.state.editForm, autorizacion).then(response => {
+            this.modalEditarProveedor();
+            this.peticionGetProveedor();
+
+            swal("Good job!", "You clicked the button!", "success");
         })
     }
 
-    modalInsertarInsumo = () => {
-        this.setState({ modalInsertar: !this.state.modalInsertar });
+    //PETICIÓN ESTADO
+    peticionEstadoProveedor = (proveedor) => {
+        axios.put(url + 'estado/' + proveedor.id, this.state.editForm, autorizacion).then(response => {
+            this.peticionGetProveedor();
+            swal("Good job!", "You clicked the button!", "success");
+        }).catch(error => {
+            console.log(error.message);
+            swal("ERROR AL ELIMINAR", 'errores', "error");
+        })
     }
-    seleccionarInsumo = (insumo) => {
+
+    //MODAL DE INSERTAR
+    modalInsertarProveedor = () => {
+        this.setState({ modalInsertarProveedor: !this.state.modalInsertarProveedor });
+    }
+
+    //MODAL DE EDITAR
+    modalEditarProveedor = () => {
+        this.setState({ modalEditarProveedor: !this.state.modalEditarProveedor });
+    }
+
+    //SELECCIONAR PROVEEDOR PARA EDICIÓN
+    seleccionarProveedor = (proveedor) => {
         this.setState({
-            tipoModal: 'actualizar',
-            form: {
-                
-                nombre: insumo.nombre,
-                material: insumo.material,
-                imagen: insumo.imagen,
-                proveedor: insumo.proveedor,
-                tipo: insumo.tipo
+            editForm: {
+                id: proveedor.id,
+                nombre: proveedor.nombre,
+                contacto: proveedor.contacto,
+                telefono: proveedor.telefono,
+                direccion: proveedor.direccion,
+                email: proveedor.email,
+                estado: proveedor.estado
             }
-        });
+        })
     }
 
-    handleChangeInsumo = async e => {
+    //INGRESO DE DATOS AL FORM
+    handleChangeProveedor = async e => {
         e.persist();
         await this.setState({
             form: {
@@ -79,83 +104,235 @@ class Insumo extends Component {
         console.log(this.state.form);
     }
 
-    componentDidMountInsumo() {
-        this.peticionGet();
+    //INGRESO DE DATOS AL EDITFORM
+    handleChangeEditProveedor = async e => {
+        e.persist();
+        await this.setState({
+            editForm: {
+                ...this.state.editForm,
+                [e.target.name]: e.target.value
+            }
+        });
+        console.log(this.state.editForm);
+    }
+
+    //FUNCION DE ARRANQUE
+    componentDidMount() {
+        this.peticionGetProveedor();
+    }
+    //CONSTRUCTOR
+
+    constructor(props) {
+        super(props);
+        this.state = {
+            data: [],
+            modalInsertarProveedor: false,
+            modalEditarProveedor: false,
+            form: {
+                nombre: '',
+                contacto: '',
+                telefono: '',
+                direccion: '',
+                email: ''
+            },
+            editForm: {
+                id: '',
+                nombre: '',
+                contacto: '',
+                telefono: '',
+                direccion: '',
+                email: '',
+                estado: ''
+            },
+            customers: null,
+            selectedCustomers: null,
+            filters: {
+                'global': { value: null, matchMode: FilterMatchMode.CONTAINS }
+            },
+            globalFilterValue: '',
+            loading: true
+        }
+        this.Botones = this.Botones.bind(this);
+        this.onGlobalFilterChange = this.onGlobalFilterChange.bind(this);
+    }
+
+    //RENDERIZAR BOTONES
+    Botones(proveedor) {
+        return <div className="btn-group btn-group-sm" role="group">
+            <button value={proveedor.id} className='btn btn-primary' onClick={() => { this.seleccionarProveedor(proveedor); this.modalEditarProveedor() }}><FontAwesomeIcon icon={faEdit} /></button>
+            <button className='btn btn-info' onClick={() => { }}><FontAwesomeIcon icon={faEye} /></button>
+            <button className='btn btn-danger' onClick={() => this.peticionEstadoProveedor(proveedor)}><FontAwesomeIcon icon={faTrashAlt} /></button>
+        </div>;
+    }
+
+    //FILTRADO GLOBAL
+    onGlobalFilterChange(e) {
+        const value = e.target.value;
+        let filters = { ...this.state.filters };
+        filters['global'].value = value;
+        console.log(value)
+        this.setState({ filters, globalFilterValue: value });
+    }
+
+    //RENDERIZAR ENCABEZADO DE LA DATATABLE
+    renderHeader() {
+        return (
+            <div className="flex justify-content-between align-items-center">
+                <h5 className="m-0 h5"></h5>
+                <span className="p-input-icon-left">
+                    <i className="pi pi-search" />
+                    <InputText value={this.state.globalFilterValue} onChange={this.onGlobalFilterChange} placeholder="Buscar" />
+                </span>
+            </div>
+        )
     }
 
     render() {
-        const { form } = this.state;
+        const { editForm, data } = this.state;
+        const header = this.renderHeader();
+        const toggle = () => this.modalInsertarProveedor();
+
         return (
-            <div className="App" >
+            <div className="datatable-doc-demo">
+                <div className="flex justify-content-between align-items-center">
+                    <h5 className="m-0 h5">Proveedor</h5>
+                    <button className='btn btn-primary' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertarProveedor() }}><FontAwesomeIcon icon={faPlus} style={{ "marginRight": "1rem" }} /><span className='menu-title'>Agregar</span></button>
+                </div>
                 <br />
-                <button className='btn btn-primary' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertarInsumo() }}>Agregar Insumo</button>
-                <br />
-                <br />
-                <table className='table'>
-                    <thead>
-                        <tr>
-                            <th>nombre</th>
-                            <th>material</th>
-                            <th>imagen</th>
-                            <th>proveedor</th>
-                            <th>tipo</th>
-                            <th>Acciones</th>
+                <div className='card'>
+                    <DataTable className='table-hover' value={data} header={header} responsiveLayout="stack"
+                        dataKey="id" selection={this.state.selectedCustomers} onSelectionChange={e => this.setState({ selectedCustomers: e.value })}
+                        filters={this.state.filters} loading={this.state.loading}
+                        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                        breakpoint="800px" paginator rows={10} rowsPerPageOptions={[10, 25, 50]} emptyMessage="Preveedores no encontrados..."
+                        currentPageReportTemplate="Registro {first} - {last} de {totalRecords} Proveedores">
+                        <Column field="nombre" header="Nombre" />
+                        <Column field="contacto" header="Contacto" />
+                        <Column field="email" header="Email" />
+                        <Column field="estado" header="Botones" body={this.Botones} />
 
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {this.state.data.map(insumo => {
-                            return (
-                                <tr>
-                                    <td>{insumo.nombre}</td>
-                                    <td>{insumo.material}</td>
-                                    <td>{insumo.imagen}</td>
-                                    <td>{insumo.proveedor}</td>
-                                    <td>{insumo.tipo}</td>
-                                    <td>
-                                    <button className='btn btn-primary' onClick={() => { this.seleccionarInsumo(insumo); this.modalInsertarInsumo() }}><FontAwesomeIcon icon={faEdit} /></button>
-                                        {" "}
-                                        <button className='btn btn-danger'><FontAwesomeIcon icon={faTrashAlt} /></button>
-                                    </td>
-                                </tr>
-                            )
-                        })}
-                    </tbody>
-                </table>
+                    </DataTable>
+                </div>
+                {/* MODAL DE REGISTRAR */}
+                <Modal isOpen={this.state.modalInsertarProveedor} toggle={toggle} size='lg'>
+                    <ModalHeader toggle={toggle}>
+                        <span>Agregar Proveedor</span>
+                        <button type="button" className="close" onClick={() => this.modalInsertarProveedor()}>
+                            <FontAwesomeIcon icon={faClose} />
+                        </button>
 
-
-                <Modal isOpen={this.state.modalInsertar}>
-                    <ModalHeader style={{ display: "block" }}>
-                        <span style={{ float: 'righ' }} >x</span>
                     </ModalHeader>
+
                     <ModalBody>
-                        <div className="form-group">
-                            <label htmlFor='nombre'>nombre</label>
-                            <input className='form-control' type='text' name='nombre' id='nombre' onChange={this.handleChange} value={form ? form.nombre:''} />
+
+                            <FormGroup>
+                                <Row>
+                                <Col md={6}>
+                                    <Label htmlFor='contacto'>Contacto:</Label>
+                                    <Input valid type='text' name='contacto' id='contacto' onChange={this.handleChangeProveedor} />
+                                    <FormText>
+                                        Nombre del contacto del proveedor.
+                                    </FormText>
+                                    <FormFeedback>
+                                        Complete el campo
+                                    </FormFeedback>
+                                </Col>
+                                <Col md={6}>
+                                    <Label htmlFor='direccion'>Dirección:</Label>
+                                    <Input invalid type='text' name='direccion' id='direccion' onChange={this.handleChangeProveedor} />
+                                    <FormText>
+                                        Dirección del proveedor.
+                                    </FormText>
+                                    <FormFeedback>
+                                        Complete el campo
+                                    </FormFeedback>
+                                </Col>
+                                </Row>
+                            </FormGroup>
+
+                            <FormGroup>
+                                <Row>
+                                <Col md={6}>
+                                    <Label htmlFor='contacto'>Contacto:</Label>
+                                    <Input invalid type='text' name='contacto' id='contacto' onChange={this.handleChangeProveedor} />
+                                    <FormText>
+                                        Nombre del contacto del proveedor.
+                                    </FormText>
+                                    <FormFeedback>
+                                        Complete el campo
+                                    </FormFeedback>
+                                </Col>
+                                <Col md={6}>
+                                    <Label htmlFor='direccion'>Dirección:</Label>
+                                    <Input invalid type='text' name='direccion' id='direccion' onChange={this.handleChangeProveedor} />
+                                    <FormText>
+                                        Dirección del proveedor.
+                                    </FormText>
+                                    <FormFeedback>
+                                        Complete el campo
+                                    </FormFeedback>
+                                </Col>
+                                </Row>
+                            </FormGroup>
+                            <FormGroup>
+                                <Row>
+                                <Col md={12}>
+                                    <Label htmlFor='contacto'>Contacto:</Label>
+                                    <Input invalid type='text' name='contacto' id='contacto' onChange={this.handleChangeProveedor} />
+                                    <FormText>
+                                        Nombre del contacto del proveedor.
+                                    </FormText>
+                                    <FormFeedback>
+                                        Complete el campo
+                                    </FormFeedback>
+                                </Col>
+                                </Row>
+                            </FormGroup>
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <button className='btn btn-primary' onClick={() => this.peticionPostProveedor()}>
+                            Insertar
+                        </button>
+                        <button className='btn btn-danger' onClick={() => this.modalInsertarProveedor()}>
+                            Cancelar
+                        </button>
+                    </ModalFooter>
+                </Modal>
+
+                {/* MODAL DE EDITAR */}
+                <Modal isOpen={this.state.modalEditarProveedor}>
+                    <ModalHeader >
+                        <span>Editar Proveedor</span>
+                    </ModalHeader>
+
+                    <ModalBody>
+                        <div className='form-group'>
+
+                            <label htmlFor='nombre'>Nombre</label>
+                            <input className='form-control' type='text' name='nombre' id='nombre' onChange={this.handleChangeEditProveedor} value={editForm.nombre || ''} />
                             <br />
-                            <label htmlFor='material'>material</label>
-                            <input className='form-control' type='text' name='material' id='material' onChange={this.handleChange} value={form ? form.material:''} />
+                            <label htmlFor='Contacto'>Contacto</label>
+                            <input className='form-control' type='text' name='contacto' id='contacto' onChange={this.handleChangeEditProveedor} value={editForm.contacto || ''} />
                             <br />
-                            <label htmlFor='imagen'>imagen</label>
-                            <input className='form-control' type='text' name='imagen' id='imagen' onChange={this.handleChange} value={form ? form.imagen: ''} />
+                            <label htmlFor='telefono'>Telefono</label>
+                            <input className='form-control' type='text' name='telefono' id='telefono' onChange={this.handleChangeEditProveedor} value={editForm.telefono || ''} />
                             <br />
-                            <label htmlFor='proveedor'>proveedor</label>
-                            <input className='form-control' type='text' name='proveedor' id='proveedor' onChange={this.handleChange} value={form ? form.proveedor: ''} />
+                            <label htmlFor='direccion'>Dirección</label>
+                            <input className='form-control' type='text' name='direccion' id='direccion' onChange={this.handleChangeEditProveedor} value={editForm.direccion || ''} />
                             <br />
-                            <label htmlFor='tipo'>tipo</label>
-                            <input className='form-control' type='text' name='tipo' id='tipo' onChange={this.handleChange} value={form ? form.tipo: ''} />
+                            <label htmlFor='email'>Email</label>
+                            <input className='form-control' type='text' name='email' id='email' onChange={this.handleChangeEditProveedor} value={editForm.email || ''} />
+
+
                         </div>
                     </ModalBody>
 
                     <ModalFooter>
-                        {this.state.tipoModal === 'insertar' ?
-                            <button className='btn btn-primary' onClick={() => this.peticionPostInsumo()}>
-                                Insertar
-                            </button> : <button className='btn btn-primary' onClick={() => this.peticionPutInsumo()}>
-                                Actualizar
-                            </button>
-                        }
-                        <button className='btn btn-danger' onClick={() => this.modalInsertarInsumo()}>
+                        <button className='btn btn-primary' onClick={() => this.peticionPutProveedor()}>
+                            Actualizar
+                        </button>
+                        <button className='btn btn-danger' onClick={() => this.modalEditarProveedor()}>
                             Cancelar
                         </button>
                     </ModalFooter>
@@ -164,5 +341,3 @@ class Insumo extends Component {
         );
     }
 }
-
-export default Insumo;

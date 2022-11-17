@@ -3,7 +3,7 @@ import Menu from "../layouts/menu/Menu";
 import Panel from "../layouts/panel/Panel";
 import Nav from '../layouts/nav/Nav';
 import Color from "../layouts/color/Color";
-import DataTableResponsiveDemo from "../Components/prueba/DataTableResponsiveDemo";
+import Proveedor from "../Components/proveedor/Proveedor";
 
 function PageProveedor() {
     return (
@@ -28,7 +28,7 @@ function PageProveedor() {
                                         <div id="detailedReports"
                                             className="carousel slide detailed-report-carousel position-static pt-2"
                                             data-ride="carousel">
-                                                <DataTableResponsiveDemo/>
+                                                <Proveedor />
                                         </div>
                                     </div>
                                 </div>

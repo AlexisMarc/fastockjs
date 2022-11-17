@@ -1,9 +1,19 @@
 import React, { Component } from 'react';
 import axios from "axios";
-
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { InputText } from 'primereact/inputtext';
+import { FilterMatchMode, FilterOperator } from 'primereact/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faEye, faPlus, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { autorizacion, baseUrl } from '../../Utils/Api';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
+import swal from 'sweetalert';
+
+import 'primeicons/primeicons.css';
+import 'primereact/resources/themes/lara-light-indigo/theme.css';
+import 'primereact/resources/primereact.css';
+import 'primeflex/primeflex.css';
 
 const url = "http://localhost:8083/api/tipo";
 
