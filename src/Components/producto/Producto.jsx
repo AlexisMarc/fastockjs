@@ -1,15 +1,13 @@
 import React, { Component } from 'react';
-import axios from "axios";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClose, faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
-import { Col, FormFeedback, FormGroup, FormText, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
-import Cookies from 'universal-cookie';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { autorizacion, baseUrl } from '../../Utils/Api';
-import { FilterMatchMode, FilterOperator } from 'primereact/api';
-import { faEye, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { InputText } from 'primereact/inputtext';
+import { FilterMatchMode} from 'primereact/api';
+import axios from 'axios';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faClose, faEdit, faEye, faPlus, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { Alert, Badge, Button, Col, Collapse, FormFeedback, FormGroup, FormText, Input, Label, ListGroup, ListGroupItem, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
+import { autorizacion, baseUrl } from '../../Utils/Api';
 import swal from 'sweetalert';
 
 
@@ -31,6 +29,16 @@ export default class Producto extends Component {
             this.setState({ data: response.data, loading: false });
         }).catch(error => {
             console.log(error.message);
+        })
+    }
+
+     //PETICIÓN GET INSUMOS
+     peticionGetCategoria = (id) => {
+        axios.get(url + 'categoria/' + id, autorizacion).then(response => {
+            this.setState({ datacategorias: response.data });
+        }).catch(error => {
+            console.log(error.message);
+            swal({title: "ERROR AL CONSULTAR CATEGORIAS", text: " ",icon: "error",buttons:false, timer:1500})
         })
     }
     //PETICION POST
@@ -80,6 +88,12 @@ export default class Producto extends Component {
         this.setState({ modalEditarProducto: !this.state.modalEditarProducto });
     }
 
+    //MODAL DE VIEW
+    modalViewProducto = () => {
+        this.setState({ modalViewProducto: !this.state.modalViewProducto });
+    }
+
+
     //SELECCIONAR producto PARA EDICIÓN
     seleccionarProducto = (producto) => {
         this.setState({
@@ -90,6 +104,17 @@ export default class Producto extends Component {
                 imagen: producto.imagen,
                 categoria: producto.categoria,
                 estado: producto.estado
+                
+            }
+        })
+    }
+
+     //PASAR CATEGORIA
+     pasarCategoria = (categoria) => {
+        this.setState({
+            datoscategoria: {
+                nombre: categoria.nombre,
+                filtro: categoria.filtro
             }
         })
     }
@@ -106,7 +131,7 @@ export default class Producto extends Component {
         console.log(this.state.producto);
     }
 
-    //INGRESO DE DATOS AL EDITFORM
+    //INGRESO DE DATOS AL editProducto
     handleChangeProductoEditProducto = async e => {
         e.persist();
         await this.setState({
@@ -128,21 +153,31 @@ export default class Producto extends Component {
         super(props);
         this.state = {
             data: [],
+            datacategorias: [],
+            estadocategorias: false,
             modalInsertarProducto: false,
             modalEditarProducto: false,
+            modalViewProducto: false,
+            categoria: false,
+            modelcategoria: false,
+            datoscategoria: {
+                nombre: '',
+                filtro:'',
+            },
             producto: {
                 nombre: '',
                 descripcion: '',
                 imagen: '',
-                categoria: 0
+                categoria: []
             },
             editProducto: {
                 id: '',
                 nombre: '',
                 descripcion: '',
                 imagen: '',
-                categoria: 0,
-                estado: ''
+                categoria: [],
+                estado: '',
+                visible:''
             },
             customers: null,
             selectedCustomers: null,
@@ -160,9 +195,9 @@ export default class Producto extends Component {
     //RENDERIZAR BOTONES
     Botones(producto) {
         return <div className="btn-group btn-group-sm" role="group">
-            <button value={producto.id} className='btn btn-primary' onClick={() => { this.seleccionarProducto(producto); this.modalEditarProducto() }}><FontAwesomeIcon icon={faEdit} /></button>
-            <button className='btn btn-info' onClick={() => { }}><FontAwesomeIcon icon={faEye} /></button>
-            <button className='btn btn-danger' onClick={() => this.peticionEstadoProducto(producto)}><FontAwesomeIcon icon={faTrashAlt} /></button>
+             <button value={producto.id} className='btn btn-primary' onClick={() => { swal({title: "¿Desea editar al producto "+producto.nombre+"?",icon: "warning",buttons: ["Cancelar", "Editar"],dangerMode:true,}).then((respuesta) => {if(respuesta){this.seleccionarProducto(producto); this.modalEditarProducto()}});  }}><FontAwesomeIcon icon={faEdit} /></button>
+            <button className='btn btn-info' onClick={() => {  this.seleccionarProducto(producto); this.modalViewProducto() }} ><FontAwesomeIcon icon={faEye} /></button>
+            <button className='btn btn-danger' onClick={() => {swal({title: "¿Desea eliminar al producto "+producto.nombre+"?",icon: "warning",buttons: ["Cancelar", "Eliminar"],dangerMode:true,}).then((respuesta) => {if(respuesta){this.peticionEstadoProducto(producto)}});}}><FontAwesomeIcon icon={faTrashAlt} /></button>
         </div>;
     }
 
@@ -189,11 +224,13 @@ export default class Producto extends Component {
     }
 
     render() {
-        const { editProducto, data } = this.state;
+        const { editProducto, data ,datacategorias, datoscategoria } = this.state;
         const header = this.renderHeaderProducto();
         const toggle = () => this.modalInsertarProducto();
-        
         const toggle2 = () => this.modalEditarProducto();
+        const toggle3 = () => this.modalViewProducto();
+        const categoria = () => this.setState({ categoria: !this.state.categoria });
+        const modelcategoria = () => this.setState({ modelcategoria: !this.state.modelcategoria });
         return (
             <div className="datatable-doc-demo">
                 <div className="flex justify-content-between align-items-center">
@@ -304,7 +341,7 @@ export default class Producto extends Component {
                     </ModalFooter>
                 </Modal>
                 {/* MODAL DE EDITAR */}
-                <Modal isOpen={this.state.modalEditarProducto}>
+                <Modal isOpen={this.state.modalEditarProducto} toggle={toggle2} size='lg'>
                     <ModalHeader>
                         <span >Editar producto</span>
                     </ModalHeader>
@@ -330,6 +367,116 @@ export default class Producto extends Component {
 
                         <button className='btn btn-danger' onClick={() => this.modalEditarProducto()}>
                             Cancelar
+                        </button>
+                    </ModalFooter>
+                </Modal>
+
+                {/* MODAL DE VISTA */}
+                <Modal isOpen={this.state.modalViewProducto} toggle={() => { toggle3(); this.setState({ datacategorias: [], categoria: false }) }}>
+                    <ModalHeader >
+                        <div><br /><h3>Producto {editProducto.nombre}</h3></div>
+                        <button type="button" className="close" onClick={() => this.modalViewProducto()}>
+                            <FontAwesomeIcon icon={faClose} />
+                        </button>
+                    </ModalHeader>
+                    <ModalBody>
+                        <FormGroup>
+                            <Row>
+                                <Col md={12} >
+                                    <ListGroup flush>
+                                        <ListGroupItem>
+                                            <p>Nombre:</p> <h5>{editProducto.nombre}</h5>
+                                        </ListGroupItem>
+                                        <ListGroupItem>
+                                            <p>Descrpción:</p> <h5>{editProducto.descripcion}</h5>
+                                        </ListGroupItem>
+                                        <ListGroupItem>
+                                            <p>Visible:</p> <h5>{editProducto.visible ? "Visible" : "No visible"}</h5>
+                                        </ListGroupItem>
+                                        <ListGroupItem>
+                                            <p>Categoria:</p> <h5>{editProducto.categoria}</h5>
+                                        </ListGroupItem>
+                                        <ListGroupItem>
+                                            <p>Inventario:</p> <h5>{editProducto.inventario}</h5>
+                                        </ListGroupItem>
+                                        
+                                        
+                                        
+
+                                        <ListGroupItem>
+                                            <div>
+                                                <Button color="primary" onClick={() => { this.peticionGetCategoria(editProducto.id); categoria() }} >
+                                                    Categoria de {editProducto.nombre}
+                                                </Button>
+
+                                            </div>
+                                        </ListGroupItem>
+                                        <ListGroupItem>
+                                            <Collapse horizontal isOpen={this.state.categoria}>
+                                                <ListGroup>
+                                                    {datacategorias.length > 0 ?
+                                                        datacategorias.map((categoria, index) => {
+                                                            return (
+                                                                <ListGroupItem action key={index} onClick={() => { modelcategoria(); this.pasarCategoria(categoria) }} style={{ "cursor": "pointer" }}>
+                                                                    <div style={{ "display": "flex", "justifyContent": "space-between" }}>
+                                                                        {/* {categoria.imagen ?
+                                                                            <img src={baseUrl + "files/" + categoria.imagen} style={stiloimg} alt={categoria.id} />
+                                                                            : <img src={baseUrl + "files/error.png"} style={stiloimg} alt={categoria.id} />
+                                                                        } */}
+
+                                                                        <p>{categoria.nombre}</p>
+                                                                    </div>
+                                                                </ListGroupItem>
+                                                            )
+                                                        }) :
+
+                                                        <Alert color="primary">
+                                                            No hay insumos registrados con el producto
+                                                        </Alert>
+                                                    }
+                                                </ListGroup>
+                                            </Collapse>
+                                        </ListGroupItem>
+                                    </ListGroup>
+                                </Col>
+
+                            </Row>
+                            <Modal isOpen={this.state.modelcategoria} toggle={modelcategoria} centered>
+                                <ModalHeader toggle={modelcategoria}>
+                                    <div><br /><h3>{datoscategoria.nombre}</h3></div>
+                                    <button type="button" className="close" onClick={modelcategoria}>
+                                        <FontAwesomeIcon icon={faClose} />
+                                    </button>
+                                </ModalHeader>
+                                <ModalBody>
+                                    <ListGroup>
+                                        <ListGroupItem style={{"display":"flex", "justifyContent": "center"}}>
+                                            {datoscategoria.imagen
+                                                ? <img src={baseUrl + "files/" + datoscategoria.imagen} style={{"width" : "70%", "borderRadius": "10%"}} alt={datoscategoria.id} />
+                                                : <img src={baseUrl + "files/error.png"} style={{"width" : "70%", "borderRadius": "10%"}} alt={datoscategoria.id} />
+                                            }
+
+                                        </ListGroupItem>
+                                        <ListGroupItem>
+                                            <p>Nombre:</p> <h5>{datoscategoria.nombre}</h5>
+                                        </ListGroupItem>
+                                        <ListGroupItem>
+                                            <p>Filtro:</p> <h5>{datoscategoria.filtro}</h5>
+                                        </ListGroupItem>
+                                    </ListGroup>
+                                </ModalBody>
+                                <ModalFooter>
+                                    <Button color="secondary" onClick={modelcategoria}>
+                                        Cerrar
+                                    </Button>
+                                </ModalFooter>
+                            </Modal>
+                        </FormGroup>
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <button className='btn btn-primary' onClick={() => { this.modalViewProducto(); this.setState({ datainsumos: [], insumo: false  }) }}>
+                            Cerrar
                         </button>
                     </ModalFooter>
                 </Modal>

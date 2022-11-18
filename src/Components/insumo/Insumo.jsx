@@ -17,7 +17,7 @@ import 'primereact/resources/primereact.css';
 import 'primeflex/primeflex.css';
 
 //URL PRINCIPAL
-const url = baseUrl + 'proveedor/';
+const url = baseUrl + 'insumo/';
 
 export default class Insumo extends Component {
 
@@ -25,7 +25,7 @@ export default class Insumo extends Component {
     state = {}
 
     //PETICIÓN GET
-    peticionGetProveedor = () => {
+    peticionGetInsumo = () => {
         axios.get(url, autorizacion).then(response => {
             this.setState({ data: response.data, loading: false });
         }).catch(error => {
@@ -34,11 +34,11 @@ export default class Insumo extends Component {
     }
 
     //PETICIÓN POST
-    peticionPostProveedor = async () => {
+    peticionPostInsumo = async () => {
 
         await axios.post(url, this.state.form, autorizacion).then(response => {
-            this.modalInsertarProveedor();
-            this.peticionGetProveedor();
+            this.modalInsertarInsumo();
+            this.peticionGetInsumo();
 
         }).catch(error => {
             console.log(error.message);
@@ -47,19 +47,19 @@ export default class Insumo extends Component {
     }
 
     //PETICIÓN PUT
-    peticionPutProveedor = () => {
+    peticionPutInsumo = () => {
         axios.put(url + this.state.editForm.id, this.state.editForm, autorizacion).then(response => {
-            this.modalEditarProveedor();
-            this.peticionGetProveedor();
+            this.modalEditarInsumo();
+            this.peticionGetInsumo();
 
             swal("Good job!", "You clicked the button!", "success");
         })
     }
 
     //PETICIÓN ESTADO
-    peticionEstadoProveedor = (proveedor) => {
-        axios.put(url + 'estado/' + proveedor.id, this.state.editForm, autorizacion).then(response => {
-            this.peticionGetProveedor();
+    peticionEstadoInsumo = (insumo) => {
+        axios.put(url + 'estado/' +insumo.id, this.state.editForm, autorizacion).then(response => {
+            this.peticionGetInsumo();
             swal("Good job!", "You clicked the button!", "success");
         }).catch(error => {
             console.log(error.message);
@@ -68,32 +68,32 @@ export default class Insumo extends Component {
     }
 
     //MODAL DE INSERTAR
-    modalInsertarProveedor = () => {
-        this.setState({ modalInsertarProveedor: !this.state.modalInsertarProveedor });
+    modalInsertarInsumo = () => {
+        this.setState({ modalInsertarInsumo: !this.state.modalInsertarInsumo });
     }
 
     //MODAL DE EDITAR
-    modalEditarProveedor = () => {
-        this.setState({ modalEditarProveedor: !this.state.modalEditarProveedor });
+    modalEditarInsumo = () => {
+        this.setState({ modalEditarInsumo: !this.state.modalEditarInsumo });
     }
 
-    //SELECCIONAR PROVEEDOR PARA EDICIÓN
-    seleccionarProveedor = (proveedor) => {
+    //SELECCIONAR INSUMO PARA EDICIÓN
+    seleccionarInsumo = (insumo) => {
         this.setState({
             editForm: {
-                id: proveedor.id,
-                nombre: proveedor.nombre,
-                contacto: proveedor.contacto,
-                telefono: proveedor.telefono,
-                direccion: proveedor.direccion,
-                email: proveedor.email,
-                estado: proveedor.estado
+                id: insumo.id,
+                nombre: insumo.nombre,
+                contacto: insumo.contacto,
+                telefono: insumo.telefono,
+                direccion: insumo.direccion,
+                email: insumo.email,
+                estado: insumo.estado
             }
         })
     }
 
     //INGRESO DE DATOS AL FORM
-    handleChangeProveedor = async e => {
+    handleChangeInsumo = async e => {
         e.persist();
         await this.setState({
             form: {
@@ -105,7 +105,7 @@ export default class Insumo extends Component {
     }
 
     //INGRESO DE DATOS AL EDITFORM
-    handleChangeEditProveedor = async e => {
+    handleChangeEditInsumo = async e => {
         e.persist();
         await this.setState({
             editForm: {
@@ -118,7 +118,7 @@ export default class Insumo extends Component {
 
     //FUNCION DE ARRANQUE
     componentDidMount() {
-        this.peticionGetProveedor();
+        this.peticionGetInsumo();
     }
     //CONSTRUCTOR
 
@@ -126,23 +126,25 @@ export default class Insumo extends Component {
         super(props);
         this.state = {
             data: [],
-            modalInsertarProveedor: false,
-            modalEditarProveedor: false,
+            modalInsertarInsumo: false,
+            modalEditarInsumo: false,
             form: {
                 nombre: '',
-                contacto: '',
-                telefono: '',
-                direccion: '',
-                email: ''
+                material: '',
+                tipo: '',
+                proveedor: '',
+                imagen: ''
+
             },
             editForm: {
                 id: '',
                 nombre: '',
-                contacto: '',
-                telefono: '',
+                estado: '',
+                material: '',
                 direccion: '',
-                email: '',
-                estado: ''
+                tipo: '',
+                proveedor: '',
+                imagen:''
             },
             customers: null,
             selectedCustomers: null,
@@ -157,11 +159,11 @@ export default class Insumo extends Component {
     }
 
     //RENDERIZAR BOTONES
-    Botones(proveedor) {
+    Botones(insumo) {
         return <div className="btn-group btn-group-sm" role="group">
-            <button value={proveedor.id} className='btn btn-primary' onClick={() => { this.seleccionarProveedor(proveedor); this.modalEditarProveedor() }}><FontAwesomeIcon icon={faEdit} /></button>
+            <button value={insumo.id} className='btn btn-primary' onClick={() => { this.seleccionarInsumo(insumo); this.modalEditarInsumo() }}><FontAwesomeIcon icon={faEdit} /></button>
             <button className='btn btn-info' onClick={() => { }}><FontAwesomeIcon icon={faEye} /></button>
-            <button className='btn btn-danger' onClick={() => this.peticionEstadoProveedor(proveedor)}><FontAwesomeIcon icon={faTrashAlt} /></button>
+            <button className='btn btn-danger' onClick={() => this.peticionEstadoInsumo(insumo)}><FontAwesomeIcon icon={faTrashAlt} /></button>
         </div>;
     }
 
@@ -190,13 +192,13 @@ export default class Insumo extends Component {
     render() {
         const { editForm, data } = this.state;
         const header = this.renderHeader();
-        const toggle = () => this.modalInsertarProveedor();
+        const toggle = () => this.modalInsertarInsumo();
 
         return (
             <div className="datatable-doc-demo">
                 <div className="flex justify-content-between align-items-center">
-                    <h5 className="m-0 h5">Proveedor</h5>
-                    <button className='btn btn-primary' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertarProveedor() }}><FontAwesomeIcon icon={faPlus} style={{ "marginRight": "1rem" }} /><span className='menu-title'>Agregar</span></button>
+                    <h5 className="m-0 h5">Insumo</h5>
+                    <button className='btn btn-primary' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertarInsumo() }}><FontAwesomeIcon icon={faPlus} style={{ "marginRight": "1rem" }} /><span className='menu-title'>Agregar</span></button>
                 </div>
                 <br />
                 <div className='card'>
@@ -207,17 +209,20 @@ export default class Insumo extends Component {
                         breakpoint="800px" paginator rows={10} rowsPerPageOptions={[10, 25, 50]} emptyMessage="Preveedores no encontrados..."
                         currentPageReportTemplate="Registro {first} - {last} de {totalRecords} Proveedores">
                         <Column field="nombre" header="Nombre" />
-                        <Column field="contacto" header="Contacto" />
-                        <Column field="email" header="Email" />
-                        <Column field="estado" header="Botones" body={this.Botones} />
+                        <Column field="material" header="Material" />
+                        <Column field="imagen" header="Imagen" />
+                        <Column field="estado" header="Estado" />
+                        <Column field="tipo" header="Tipo" />
+                        <Column field="proveedor" header="Proveedor" />
+                        <Column field="idproveedor" header="Id Proveedor" body={this.Botones} />
 
                     </DataTable>
                 </div>
                 {/* MODAL DE REGISTRAR */}
-                <Modal isOpen={this.state.modalInsertarProveedor} toggle={toggle} size='lg'>
+                <Modal isOpen={this.state.modalInsertarInsumo} toggle={toggle} size='lg'>
                     <ModalHeader toggle={toggle}>
-                        <span>Agregar Proveedor</span>
-                        <button type="button" className="close" onClick={() => this.modalInsertarProveedor()}>
+                        <span>Agregar Insumo</span>
+                        <button type="button" className="close" onClick={() => this.modalInsertarInsumo()}>
                             <FontAwesomeIcon icon={faClose} />
                         </button>
 
@@ -228,59 +233,50 @@ export default class Insumo extends Component {
                             <FormGroup>
                                 <Row>
                                 <Col md={6}>
-                                    <Label htmlFor='contacto'>Contacto:</Label>
-                                    <Input valid type='text' name='contacto' id='contacto' onChange={this.handleChangeProveedor} />
+                                    <Label htmlFor='nombre'>Nombre:</Label>
+                                    <Input valid type='text' name='nombre' id='nombre' onChange={this.handleChangeInsumo} />
                                     <FormText>
-                                        Nombre del contacto del proveedor.
+                                        Nombre del insumo.
                                     </FormText>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
                                 </Col>
                                 <Col md={6}>
-                                    <Label htmlFor='direccion'>Dirección:</Label>
-                                    <Input invalid type='text' name='direccion' id='direccion' onChange={this.handleChangeProveedor} />
+                                    <Label htmlFor='material'>Material:</Label>
+                                    <Input invalid type='text' name='material' id='material' onChange={this.handleChangeInsumo} />
                                     <FormText>
-                                        Dirección del proveedor.
-                                    </FormText>
-                                    <FormFeedback>
-                                        Complete el campo
-                                    </FormFeedback>
-                                </Col>
-                                </Row>
-                            </FormGroup>
-
-                            <FormGroup>
-                                <Row>
-                                <Col md={6}>
-                                    <Label htmlFor='contacto'>Contacto:</Label>
-                                    <Input invalid type='text' name='contacto' id='contacto' onChange={this.handleChangeProveedor} />
-                                    <FormText>
-                                        Nombre del contacto del proveedor.
+                                        Material del insumo.
                                     </FormText>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
                                 </Col>
                                 <Col md={6}>
-                                    <Label htmlFor='direccion'>Dirección:</Label>
-                                    <Input invalid type='text' name='direccion' id='direccion' onChange={this.handleChangeProveedor} />
+                                    <Label htmlFor='tipo'>Tipo:</Label>
+                                    <Input invalid type='text' name='tipo' id='tipo' onChange={this.handleChangeInsumo} />
                                     <FormText>
-                                        Dirección del proveedor.
+                                       Tipo del insumo.
                                     </FormText>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
                                 </Col>
-                                </Row>
-                            </FormGroup>
-                            <FormGroup>
-                                <Row>
-                                <Col md={12}>
-                                    <Label htmlFor='contacto'>Contacto:</Label>
-                                    <Input invalid type='text' name='contacto' id='contacto' onChange={this.handleChangeProveedor} />
+                                <Col md={6}>
+                                    <Label htmlFor='proveedor'>Proveedor:</Label>
+                                    <Input invalid type='text' name='proveedor' id='proveedor' onChange={this.handleChangeInsumo} />
                                     <FormText>
-                                        Nombre del contacto del proveedor.
+                                       Proveedor del insumo.
+                                    </FormText>
+                                    <FormFeedback>
+                                        Complete el campo
+                                    </FormFeedback>
+                                </Col>
+                                <Col md={6}>
+                                    <Label htmlFor='insumo'>Imagen:</Label>
+                                    <Input invalid type='text' name='imagen' id='imagen' onChange={this.handleChangeInsumo} />
+                                    <FormText>
+                                       Imagen del insumo.
                                     </FormText>
                                     <FormFeedback>
                                         Complete el campo
@@ -291,48 +287,53 @@ export default class Insumo extends Component {
                     </ModalBody>
 
                     <ModalFooter>
-                        <button className='btn btn-primary' onClick={() => this.peticionPostProveedor()}>
+                        <button className='btn btn-primary' onClick={() => this.peticionPostInsumo()}>
                             Insertar
                         </button>
-                        <button className='btn btn-danger' onClick={() => this.modalInsertarProveedor()}>
+                        <button className='btn btn-danger' onClick={() => this.modalInsertarInsumo()}>
                             Cancelar
                         </button>
                     </ModalFooter>
                 </Modal>
 
                 {/* MODAL DE EDITAR */}
-                <Modal isOpen={this.state.modalEditarProveedor}>
+                <Modal isOpen={this.state.modalEditarInsumo}>
                     <ModalHeader >
-                        <span>Editar Proveedor</span>
+                        <span>Editar Insumo</span>
                     </ModalHeader>
 
                     <ModalBody>
                         <div className='form-group'>
 
+                            <label htmlFor='id'>Id</label>
+                            <input className='form-control' type='text' name='id' id='id' onChange={this.handleChangeEditInsumo} value={editForm.id || ''} />
+                            <br />
                             <label htmlFor='nombre'>Nombre</label>
-                            <input className='form-control' type='text' name='nombre' id='nombre' onChange={this.handleChangeEditProveedor} value={editForm.nombre || ''} />
+                            <input className='form-control' type='text' name='nombre' id='nombre' onChange={this.handleChangeEditInsumo} value={editForm.nombre || ''} />
                             <br />
-                            <label htmlFor='Contacto'>Contacto</label>
-                            <input className='form-control' type='text' name='contacto' id='contacto' onChange={this.handleChangeEditProveedor} value={editForm.contacto || ''} />
+                            <label htmlFor='estado'>Estado</label>
+                            <input className='form-control' type='text' name='estado' id='estado' onChange={this.handleChangeEditInsumo} value={editForm.estado || ''} />
+                            <br />Insumo
+                            <label htmlFor='material'>Material</label>
+                            <input className='form-control' type='text' name='material' id='material' onChange={this.handleChangeEditInsumo} value={editForm.material || ''} />
                             <br />
-                            <label htmlFor='telefono'>Telefono</label>
-                            <input className='form-control' type='text' name='telefono' id='telefono' onChange={this.handleChangeEditProveedor} value={editForm.telefono || ''} />
+                            <label htmlFor='tipo'>Tipo</label>
+                            <input className='form-control' type='text' name='tipo' id='tipo' onChange={this.handleChangeEditInsumo} value={editForm.tipo || ''} />
                             <br />
-                            <label htmlFor='direccion'>Dirección</label>
-                            <input className='form-control' type='text' name='direccion' id='direccion' onChange={this.handleChangeEditProveedor} value={editForm.direccion || ''} />
-                            <br />
-                            <label htmlFor='email'>Email</label>
-                            <input className='form-control' type='text' name='email' id='email' onChange={this.handleChangeEditProveedor} value={editForm.email || ''} />
+                            <label htmlFor='proveedor'>Proveedor</label>
+                            <input className='form-control' type='text' name='proveedor' id='proveedor' onChange={this.handleChangeEditInsumo} value={editForm.proveedor || ''} />
+                            <label htmlFor='imagen'>Imagen</label>
+                            <input className='form-control' type='text' name='imagen' id='imagen' onChange={this.handleChangeEditInsumo} value={editForm.imagen || ''} />
 
 
                         </div>
                     </ModalBody>
 
                     <ModalFooter>
-                        <button className='btn btn-primary' onClick={() => this.peticionPutProveedor()}>
+                        <button className='btn btn-primary' onClick={() => this.peticionPutInsumo()}>
                             Actualizar
                         </button>
-                        <button className='btn btn-danger' onClick={() => this.modalEditarProveedor()}>
+                        <button className='btn btn-danger' onClick={() => this.modalEditarInsumo()}>
                             Cancelar
                         </button>
                     </ModalFooter>

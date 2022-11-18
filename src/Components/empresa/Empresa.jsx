@@ -7,6 +7,7 @@ import { FilterMatchMode, FilterOperator } from 'primereact/api';
 import { faEye, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { Alert, Badge, Button, Collapse, ListGroup, ListGroupItem } from 'reactstrap';
 import { Col, FormFeedback, FormGroup, FormText, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 import { InputText } from 'primereact/inputtext';
 import swal from 'sweetalert';
@@ -23,6 +24,15 @@ export default class Empresa extends Component {
             this.setState({ data: response.data, loading: false });
         }).catch(error => {
             console.log(error.message);
+        })
+    }
+    //PETICIÓN GET  ESPECIALIDAD
+    peticionGetCategoria = (id) => {    
+        axios.get(url + 'especialidad', autorizacion).then(response => {
+            this.setState({ dataespecialidad: response.data });
+        }).catch(error => {
+            console.log(error.message);
+            swal({title: "ERROR AL CONSULTAR ESPECIALIDAD", text: " ",icon: "error",buttons:false, timer:1500})
         })
     }
     //PETICIÓN POST
@@ -65,6 +75,10 @@ export default class Empresa extends Component {
     //MODAL DE EDITAR
     modalEditarEmpresa = () => {
         this.setState({ modalEditarEmpresa: !this.state.modalEditarEmpresa });
+    }
+    //MODAL DE VIEW
+    modalViewEmpresa = () => {
+        this.setState({ modalViewEmpresa: !this.state.modalViewEmpresa });
     }
     //SELECCIONAR EMPRESA PARA EDICIÓN
     seleccionarEmpresa = (empresa) => {
@@ -114,6 +128,11 @@ export default class Empresa extends Component {
         data: [],
         modalInsertarEmpresa: false,
         modalEditarEmpresa: false,
+        modalViewEmpresa: false,
+        datosespecialidad: {
+            nombre: '',
+            descripcion: ''
+        },
         empresa: {
             nombre: '',
             contacto: '',
@@ -177,11 +196,13 @@ export default class Empresa extends Component {
     }
 
     render() {
-        const { editempresa, data } = this.state;
+        const { editempresa, data,  datosespecialidad } = this.state;
         const header = this.renderHeader();
         const toggle = () => this.modalInsertarEmpresa();
-        
         const toggle2 = () => this.modalEditarEmpresa();
+        const toggle3 = () => this.modalViewEmpresa();
+        const especialidad = () => this.setState({ especialidad: !this.state.especialidad });
+        const modelespecialidad = () => this.setState({ modelespecialidad: !this.state.modelespecialidad });
         return (
             <div className="datatable-doc-demo">
                 <div className="flex justify-content-between align-items-center">
@@ -223,7 +244,7 @@ export default class Empresa extends Component {
                                     <Label htmlFor='nombre'>Nombre:</Label>
                                     <Input valid type='text' name='nombre' id='nombre' onChange={this.handleChangeEmpresa} />
                                     <FormText>
-                                        Nombre del nombre del proveedor.
+                                        Nombre del nombre del Especialidad.
                                     </FormText>
                                     <FormFeedback>
                                         Complete el campo
@@ -258,7 +279,7 @@ export default class Empresa extends Component {
                                     <Label htmlFor='direccion'>Dirección:</Label>
                                     <Input invalid type='text' name='direccion' id='direccion' onChange={this.handleChangeEmpresa} />
                                     <FormText>
-                                        Dirección del proveedor.
+                                        Dirección del Especialidad.
                                     </FormText>
                                     <FormFeedback>
                                         Complete el campo
@@ -317,8 +338,8 @@ export default class Empresa extends Component {
 
 
                 {/*  MODAL Editar*/}
-                <Modal isOpen={this.state.modalEditarEmpresa}>
-                <ModalHeader toggle2={toggle2}>
+                <Modal isOpen={this.state.modalEditarEmpresa} toggle={toggle2} size='lg'>
+                <ModalHeader>
                         <span>Editar Empresa</span>
                         <button type="button" className="close" onClick={() => this.modalEditarEmpresa()}>
                             <FontAwesomeIcon icon={faClose} />
@@ -330,9 +351,9 @@ export default class Empresa extends Component {
                                 <Row>
                                 <Col md={6}>
                                     <Label htmlFor='nombre'>Nombre:</Label>
-                                    <Input valid type='text' name='nombre' id='nombre' onChange={this.handleChangeEmpresa} />
+                                    <Input valid type='text' name='nombre' id='nombre' onChange={this.handleChangeEmpresa} value={editForm.nombre || ''}/>
                                     <FormText>
-                                        Nombre del nombre del proveedor.
+                                        Nombre del nombre del Especialidad.
                                     </FormText>
                                     <FormFeedback>
                                         Complete el campo
@@ -340,7 +361,7 @@ export default class Empresa extends Component {
                                 </Col>
                                 <Col md={6}>
                                     <Label htmlFor='contacto'>Contacto:</Label>
-                                    <Input invalid type='text' name='contacto' id='contacto' onChange={this.handleChangeEmpresa} />
+                                    <Input invalid type='text' name='contacto' id='contacto' onChange={this.handleChangeEmpresa} value={editForm.contacto || ''}/>
                                     <FormText>
                                         Contacto del la empresa.
                                     </FormText>
@@ -367,7 +388,7 @@ export default class Empresa extends Component {
                                     <Label htmlFor='direccion'>Dirección:</Label>
                                     <Input invalid type='text' name='direccion' id='direccion' onChange={this.handleChangeEmpresa} />
                                     <FormText>
-                                        Dirección del proveedor.
+                                        Dirección del Especialidad.
                                     </FormText>
                                     <FormFeedback>
                                         Complete el campo
@@ -420,6 +441,63 @@ export default class Empresa extends Component {
                         </button>
                         <button className='btn btn-danger' onClick={() => this.modalEditarEmpresa()}>
                             Cancelar
+                        </button>
+                    </ModalFooter>
+                </Modal>
+                {/* MODAL DE VISTA EMPRESA */}
+                <Modal isOpen={this.state.modalViewEmpresa} toggle={() => { toggle3(); this.setState({ datosespecialidad: [], especialidad: false }) }}>
+                    <ModalHeader >
+                        <div><br /><h3>Empresa {editempresa.nombre}</h3></div>
+                        <button type="button" className="close" onClick={() => this.modalViewEmpresa()}>
+                            <FontAwesomeIcon icon={faClose} />
+                        </button>
+                    </ModalHeader>
+                    <ModalBody>
+                        <FormGroup>
+                            <Row>
+                                <Col md={12} >
+                                    <ListGroup flush>
+                                        <ListGroupItem>
+                                            <p>Nombre:</p> <h5>{editempresa.nombre}</h5>
+                                        </ListGroupItem>
+                                        <ListGroupItem>
+                                            <p>Contacto:</p> <h5>{editempresa.contacto}</h5>
+                                        </ListGroupItem>
+                                        <ListGroupItem>
+                                            <p>Dirección:</p> <h5>{editempresa.direccion}</h5>
+                                        </ListGroupItem>
+                                        <ListGroupItem>
+                                            <p>Teléfono:</p><h5>{editempresa.telefono}</h5>
+                                        </ListGroupItem>
+                                        <ListGroupItem>
+                                            <p>Email:</p> <h5>{editempresa.email}</h5>
+                                        </ListGroupItem>
+                                        <ListGroupItem>
+                                            <p>Imagen:</p> <h5>{editempresa.imagen}</h5>
+                                        </ListGroupItem>
+                                        <ListGroupItem>
+                                            <p>Especialidad:</p> <h5>{editempresa.especialidad}</h5>
+                                        </ListGroupItem>
+
+                                        <ListGroupItem>
+                                            <div>
+                                                <Button color="primary" onClick={() => { this.peticionGetEspecialidad(editempresa.id); especialidad() }} >
+                                                    especialidads de {editempresa.nombre}
+                                                </Button>
+
+                                            </div>
+                                        </ListGroupItem>
+                                        
+                                    </ListGroup>
+                                </Col>
+
+                            </Row>
+                        </FormGroup>
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <button className='btn btn-primary' onClick={() => { this.modalViewEmpresa(); this.setState({ datosespecialidad: [], especialidad: false  }) }}>
+                            Cerrar
                         </button>
                     </ModalFooter>
                 </Modal>
