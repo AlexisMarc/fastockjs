@@ -26,9 +26,9 @@ export default class Empresa extends Component {
             console.log(error.message);
         })
     }
-    //PETICIÓN GET  ESPECIALIDAD
-    peticionGetCategoria = (id) => {    
-        axios.get(url + 'especialidad', autorizacion).then(response => {
+    //PETICIÓN GET ESPECIALIDAD
+    peticionGetEspecialidad = (id) => {    
+        axios.get(url + 'especialidad/'+ id, autorizacion).then(response => {
             this.setState({ dataespecialidad: response.data });
         }).catch(error => {
             console.log(error.message);
@@ -38,22 +38,27 @@ export default class Empresa extends Component {
     //PETICIÓN POST
     peticionPostEmpresa = async () => {
 
-        delete this.state.empresa.id;
         await axios.post(url, this.state.empresa, autorizacion).then(response => {
             this.modalInsertarEmpresa();
             this.peticionGetEmpresa();
+            
 
         }).catch(error => {
             console.log(error.message);
+            swal({title: "ERROR AL REGISTRAR", text: " ",icon: "error",buttons:false, timer:1500})
         })
 
     }
     //PETICIÓN PUT
     peticionPutEmpresa = () => {
         axios.put(url + this.state.editempresa.id, this.state.editempresa, autorizacion).then(response => {
-            this.modalInsertarEmpresa();
+            this.modalEditarEmpresa();
             this.peticionGetEmpresa();
-            swal("Good job!", "You clicked the button!", "success");
+            swal({title: "Empresa "+response.data.nombre+" editado", text: " ",icon: "success",buttons:false, timer:1500})
+        })
+        .catch(error => {
+            console.log(error.message);
+            swal({title: "ERROR AL EDITAR", text: " ",icon: "error",buttons:false, timer:1500})
         })
     }
 
@@ -61,10 +66,10 @@ export default class Empresa extends Component {
     peticionEstadoEmpresa = (empresa) => {
         axios.put(url + 'estado/' + empresa.id, this.state.editEmpresa, autorizacion).then(response => {
             this.peticionGetEmpresa();
-            swal("Good job!", "You clicked the button!", "success");
+            swal({title: "Empresa "+response.data.nombre+" eliminado", text: " ",icon: "success",buttons:false, timer:1500})
         }).catch(error => {
             console.log(error.message);
-            swal("ERROR AL ELIMINAR", 'errores', "error");
+            swal({title: "ERROR AL ELIMINAR", text: " ",icon: "error",buttons:false, timer:1500})
         })
     }
 
@@ -129,9 +134,10 @@ export default class Empresa extends Component {
         modalInsertarEmpresa: false,
         modalEditarEmpresa: false,
         modalViewEmpresa: false,
-        datosespecialidad: {
-            nombre: '',
-            descripcion: ''
+        dataespecialidad: [],
+        datosespecialidad:{
+            nombre:'',
+            descripcion:''
         },
         empresa: {
             nombre: '',
@@ -168,9 +174,10 @@ export default class Empresa extends Component {
     //RENDERIZAR BOTONES
     Botones(empresa) {
         return <div className="btn-group btn-group-sm" role="group">
-            <button value={empresa.id} className='btn btn-primary' onClick={() => { this.seleccionarEmpresa(empresa); this.modalEditarEmpresa() }}><FontAwesomeIcon icon={faEdit} /></button>
-            <button className='btn btn-info' onClick={() =>{} }><FontAwesomeIcon icon={faEye} /></button>
-            <button className='btn btn-danger' onClick={() => this.peticionEstadoEmpresa(empresa)}><FontAwesomeIcon icon={faTrashAlt} /></button>
+                        <button value={empresa.id} className='btn btn-primary' onClick={() => { swal({title: "¿Desea editar al Empresa "+Empresa.nombre+"?",icon: "warning",buttons: ["Cancelar", "Editar"],dangerMode:true,}).then((respuesta) => {if(respuesta){this.seleccionarEmpresa(empresa); this.modalEditarEmpresa()}});  }}><FontAwesomeIcon icon={faEdit} /></button>
+                        <button className='btn btn-info' onClick={() => {  this.seleccionarEmpresa(empresa); this.modalViewEmpresa() }} ><FontAwesomeIcon icon={faEye} /></button>
+                        <button className='btn btn-danger' onClick={() => {swal({title: "¿Desea eliminar al empresa "+empresa.nombre+"?",icon: "warning",buttons: ["Cancelar", "Eliminar"],dangerMode:true,}).then((respuesta) => {if(respuesta){this.peticionEstadoEmpresa(empresa)}});}}><FontAwesomeIcon icon={faTrashAlt} /></button>
+
         </div>;
     }
         //FILTRADO GLOBAL
@@ -196,13 +203,12 @@ export default class Empresa extends Component {
     }
 
     render() {
-        const { editempresa, data,  datosespecialidad } = this.state;
+        const { editempresa, data,  dataespecialidad } = this.state;
         const header = this.renderHeader();
         const toggle = () => this.modalInsertarEmpresa();
         const toggle2 = () => this.modalEditarEmpresa();
         const toggle3 = () => this.modalViewEmpresa();
         const especialidad = () => this.setState({ especialidad: !this.state.especialidad });
-        const modelespecialidad = () => this.setState({ modelespecialidad: !this.state.modelespecialidad });
         return (
             <div className="datatable-doc-demo">
                 <div className="flex justify-content-between align-items-center">
@@ -243,9 +249,6 @@ export default class Empresa extends Component {
                                 <Col md={6}>
                                     <Label htmlFor='nombre'>Nombre:</Label>
                                     <Input valid type='text' name='nombre' id='nombre' onChange={this.handleChangeEmpresa} />
-                                    <FormText>
-                                        Nombre del nombre del Especialidad.
-                                    </FormText>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
@@ -253,9 +256,6 @@ export default class Empresa extends Component {
                                 <Col md={6}>
                                     <Label htmlFor='contacto'>Contacto:</Label>
                                     <Input invalid type='text' name='contacto' id='contacto' onChange={this.handleChangeEmpresa} />
-                                    <FormText>
-                                        Contacto del la empresa.
-                                    </FormText>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
@@ -268,9 +268,7 @@ export default class Empresa extends Component {
                                 <Col md={6}>
                                     <Label htmlFor='telefono'>Telefono:</Label>
                                     <Input invalid type='text' name='telefono' id='telefono' onChange={this.handleChangeEmpresa} />
-                                    <FormText>
-                                    telefono de la empresa.
-                                    </FormText>
+                                    
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
@@ -278,9 +276,6 @@ export default class Empresa extends Component {
                                 <Col md={6}>
                                     <Label htmlFor='direccion'>Dirección:</Label>
                                     <Input invalid type='text' name='direccion' id='direccion' onChange={this.handleChangeEmpresa} />
-                                    <FormText>
-                                        Dirección del Especialidad.
-                                    </FormText>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
@@ -292,9 +287,7 @@ export default class Empresa extends Component {
                                 <Col md={6}>
                                     <Label htmlFor='email'>Email:</Label>
                                     <Input invalid type='text' name='email' id='email' onChange={this.handleChangeEmpresa} />
-                                    <FormText>
-                                    Email de la empresa.
-                                    </FormText>
+                                    
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
@@ -302,9 +295,6 @@ export default class Empresa extends Component {
                                 <Col md={6}>
                                     <Label htmlFor='imagen'>Imagen:</Label>
                                     <Input invalid type='text' name='imagen' id='imagen' onChange={this.handleChangeEmpresa} />
-                                    <FormText>
-                                        Imagen de la empresa.
-                                    </FormText>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
@@ -316,9 +306,6 @@ export default class Empresa extends Component {
                                 <Col md={12}>
                                     <Label htmlFor='especialidad'>Especialidad:</Label>
                                     <Input invalid type='text' name='especialidad' id='especialidad' onChange={this.handleChangeEmpresa} />
-                                    <FormText>
-                                    especialidad.
-                                    </FormText>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
@@ -351,20 +338,14 @@ export default class Empresa extends Component {
                                 <Row>
                                 <Col md={6}>
                                     <Label htmlFor='nombre'>Nombre:</Label>
-                                    <Input valid type='text' name='nombre' id='nombre' onChange={this.handleChangeEmpresa} value={editForm.nombre || ''}/>
-                                    <FormText>
-                                        Nombre del nombre del Especialidad.
-                                    </FormText>
+                                    <Input valid type='text' name='nombre' id='nombre' onChange={this.handleChangeEditEmpresa} value={editempresa.nombre || ''}/>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
                                 </Col>
                                 <Col md={6}>
                                     <Label htmlFor='contacto'>Contacto:</Label>
-                                    <Input invalid type='text' name='contacto' id='contacto' onChange={this.handleChangeEmpresa} value={editForm.contacto || ''}/>
-                                    <FormText>
-                                        Contacto del la empresa.
-                                    </FormText>
+                                    <Input invalid type='text' name='contacto' id='contacto' onChange={this.handleChangeEditEmpresa} value={editempresa.contacto || ''}/>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
@@ -376,20 +357,15 @@ export default class Empresa extends Component {
                                 <Row>
                                 <Col md={6}>
                                     <Label htmlFor='telefono'>Telefono:</Label>
-                                    <Input invalid type='text' name='telefono' id='telefono' onChange={this.handleChangeEmpresa} />
-                                    <FormText>
-                                    telefono de la empresa.
-                                    </FormText>
+                                    <Input invalid type='text' name='telefono' id='telefono' onChange={this.handleChangeEditEmpresa} value={editempresa.telefono || ''} />
+                                    
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
                                 </Col>
                                 <Col md={6}>
                                     <Label htmlFor='direccion'>Dirección:</Label>
-                                    <Input invalid type='text' name='direccion' id='direccion' onChange={this.handleChangeEmpresa} />
-                                    <FormText>
-                                        Dirección del Especialidad.
-                                    </FormText>
+                                    <Input invalid type='text' name='direccion' id='direccion' onChange={this.handleChangeEditEmpresa} value={editempresa.direccion || ''}/>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
@@ -400,20 +376,15 @@ export default class Empresa extends Component {
                                 <Row>
                                 <Col md={6}>
                                     <Label htmlFor='email'>Email:</Label>
-                                    <Input invalid type='text' name='email' id='email' onChange={this.handleChangeEmpresa} />
-                                    <FormText>
-                                    Email de la empresa.
-                                    </FormText>
+                                    <Input invalid type='text' name='email' id='email' onChange={this.handleChangeEditEmpresa} value={editempresa.contacto || ''}/>
+                                    
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
                                 </Col>
                                 <Col md={6}>
                                     <Label htmlFor='imagen'>Imagen:</Label>
-                                    <Input invalid type='text' name='imagen' id='imagen' onChange={this.handleChangeEmpresa} />
-                                    <FormText>
-                                        Imagen de la empresa.
-                                    </FormText>
+                                    <Input invalid type='text' name='imagen' id='imagen' onChange={this.handleChangeEditEmpresa} value={editempresa.imagen || ''}/>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
@@ -424,10 +395,7 @@ export default class Empresa extends Component {
                                 <Row>
                                 <Col md={12}>
                                     <Label htmlFor='especialidad'>Especialidad:</Label>
-                                    <Input invalid type='text' name='especialidad' id='especialidad' onChange={this.handleChangeEmpresa} />
-                                    <FormText>
-                                    especialidad.
-                                    </FormText>
+                                    <Input invalid type='text' name='especialidad' id='especialidad' onChange={this.handleChangeEmpresa} value={editempresa.especialidad || ''} />
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
@@ -445,7 +413,7 @@ export default class Empresa extends Component {
                     </ModalFooter>
                 </Modal>
                 {/* MODAL DE VISTA EMPRESA */}
-                <Modal isOpen={this.state.modalViewEmpresa} toggle={() => { toggle3(); this.setState({ datosespecialidad: [], especialidad: false }) }}>
+                <Modal isOpen={this.state.modalViewEmpresa} toggle={() => { toggle3(); this.setState({ dataespecialidad: [], especialidad: false }) }}>
                     <ModalHeader >
                         <div><br /><h3>Empresa {editempresa.nombre}</h3></div>
                         <button type="button" className="close" onClick={() => this.modalViewEmpresa()}>
@@ -496,7 +464,7 @@ export default class Empresa extends Component {
                     </ModalBody>
 
                     <ModalFooter>
-                        <button className='btn btn-primary' onClick={() => { this.modalViewEmpresa(); this.setState({ datosespecialidad: [], especialidad: false  }) }}>
+                        <button className='btn btn-primary' onClick={() => { this.modalViewEmpresa(); this.setState({ dataespecialidad: [], especialidad: false  }) }}>
                             Cerrar
                         </button>
                     </ModalFooter>

@@ -161,9 +161,9 @@ export default class Insumo extends Component {
     //RENDERIZAR BOTONES
     Botones(insumo) {
         return <div className="btn-group btn-group-sm" role="group">
-            <button value={insumo.id} className='btn btn-primary' onClick={() => { this.seleccionarInsumo(insumo); this.modalEditarInsumo() }}><FontAwesomeIcon icon={faEdit} /></button>
-            <button className='btn btn-info' onClick={() => { }}><FontAwesomeIcon icon={faEye} /></button>
-            <button className='btn btn-danger' onClick={() => this.peticionEstadoInsumo(insumo)}><FontAwesomeIcon icon={faTrashAlt} /></button>
+            <button value={insumo.id} className='btn btn-primary' onClick={() => { swal({title: "¿Desea editar al insumo "+insumo.nombre+"?",icon: "warning",buttons: ["Cancelar", "Editar"],dangerMode:true,}).then((respuesta) => {if(respuesta){this.seleccionarInsumo(insumo); this.modalEditarInsumo()}});  }}><FontAwesomeIcon icon={faEdit} /></button>
+            <button className='btn btn-info' onClick={() => {  this.seleccionarInsumo(insumo); this.modalViewInsumo() }} ><FontAwesomeIcon icon={faEye} /></button>
+            <button className='btn btn-danger' onClick={() => {swal({title: "¿Desea eliminar al insumo "+insumo.nombre+"?",icon: "warning",buttons: ["Cancelar", "Eliminar"],dangerMode:true,}).then((respuesta) => {if(respuesta){this.peticionEstadoInsumo(insumo)}});}}><FontAwesomeIcon icon={faTrashAlt} /></button>
         </div>;
     }
 
