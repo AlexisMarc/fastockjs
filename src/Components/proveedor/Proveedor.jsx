@@ -407,10 +407,10 @@ export default class Proveedor extends Component {
                 </Modal>
 
                 {/* MODAL DE VISTA */}
-                <Modal isOpen={this.state.modalViewProveedor} toggle={() => { toggle3(); this.setState({ datainsumos: [], insumo: false }) }}>
+                <Modal isOpen={this.state.modalViewProveedor} toggle={() => { this.setState({ datainsumos: [], insumo: false }); toggle3();  }}>
                     <ModalHeader >
                         <div><br /><h3>Proveedor {editForm.nombre}</h3></div>
-                        <button type="button" className="close" onClick={() => this.modalViewProveedor()}>
+                        <button type="button" className="close" onClick={() => {this.modalViewProveedor(); this.setState({ datainsumos: [], insumo: false })}}>
                             <FontAwesomeIcon icon={faClose} />
                         </button>
                     </ModalHeader>
@@ -420,7 +420,7 @@ export default class Proveedor extends Component {
                                 <Col md={12} >
                                     <ListGroup flush>
                                         <ListGroupItem>
-                                            <p>Nombre:</p> <h5>{editForm.nombre}</h5>
+                                            <p>Nombr:</p> <h5>{editForm.nombre}</h5>
                                         </ListGroupItem>
                                         <ListGroupItem>
                                             <p>Contacto:</p> <h5>{editForm.contacto}</h5>
