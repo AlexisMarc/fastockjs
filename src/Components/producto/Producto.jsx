@@ -2,11 +2,14 @@ import React, { Component } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { InputText } from 'primereact/inputtext';
-import { FilterMatchMode} from 'primereact/api';
+import { FileUpload } from 'primereact/fileupload';
+import { FilterMatchMode } from 'primereact/api';
 import axios from 'axios';
+import { MultiSelect } from 'primereact/multiselect';
+import Select from 'react-select'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClose, faEdit, faEye, faPlus, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
-import { Alert, Badge, Button, Col, Collapse, FormFeedback, FormGroup, FormText, Input, Label, ListGroup, ListGroupItem, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
+import { Alert, Badge, Button, Col, Collapse, Dropdown, FormFeedback, FormGroup, FormText, Input, Label, ListGroup, ListGroupItem, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 import { autorizacion, baseUrl } from '../../Utils/Api';
 import swal from 'sweetalert';
 
@@ -32,13 +35,22 @@ export default class Producto extends Component {
         })
     }
 
-     //PETICIÓN GET INSUMOS
-     peticionGetCategoria = (id) => {
-        axios.get(url + 'categoria/' + id, autorizacion).then(response => {
-            this.setState({ datacategorias: response.data });
+
+
+    //PETICIÓN GET CATEGORIA
+    peticionGetCategoria = () => {
+        axios.get(url + 'categoria/', autorizacion).then(response => {
+            let array = [];
+            response.data.map((categoria)=>{
+                let dato ={value: categoria.id, label: categoria.nombre}
+                array.push(dato)
+            })
+            
+            this.setState({ datacategorias: array });
+            console.log(array);
         }).catch(error => {
             console.log(error.message);
-            swal({title: "ERROR AL CONSULTAR CATEGORIAS", text: " ",icon: "error",buttons:false, timer:1500})
+            swal({ title: "ERROR AL CONSULTAR CATEGORIAS", text: " ", icon: "error", buttons: false, timer: 1500 })
         })
     }
     //PETICION POST
@@ -104,13 +116,13 @@ export default class Producto extends Component {
                 imagen: producto.imagen,
                 categoria: producto.categoria,
                 estado: producto.estado
-                
+
             }
         })
     }
 
-     //PASAR CATEGORIA
-     pasarCategoria = (categoria) => {
+    //PASAR CATEGORIA
+    pasarCategoria = (categoria) => {
         this.setState({
             datoscategoria: {
                 nombre: categoria.nombre,
@@ -146,6 +158,7 @@ export default class Producto extends Component {
     //FUNCION DE ARRANQUE
     componentDidMount() {
         this.peticionGetProducto();
+        this.peticionGetCategoria();
     };
 
     //CONSTRUCTOR
@@ -153,22 +166,17 @@ export default class Producto extends Component {
         super(props);
         this.state = {
             data: [],
-            datacategorias: [],
-            estadocategorias: false,
+            selectedItems2: null,
             modalInsertarProducto: false,
             modalEditarProducto: false,
             modalViewProducto: false,
-            categoria: false,
-            modelcategoria: false,
-            datoscategoria: {
-                nombre: '',
-                filtro:'',
-            },
+            datacategorias: [],
+            selectedCategorias: [],
             producto: {
                 nombre: '',
                 descripcion: '',
                 imagen: '',
-                categoria: []
+                categoria: null
             },
             editProducto: {
                 id: '',
@@ -177,7 +185,7 @@ export default class Producto extends Component {
                 imagen: '',
                 categoria: [],
                 estado: '',
-                visible:''
+                visible: ''
             },
             customers: null,
             selectedCustomers: null,
@@ -187,17 +195,50 @@ export default class Producto extends Component {
             globalFilterValue: '',
             loading: true
         }
+        this.cities = [
+            { value: 'chocolate', label: 'Chocolate' },
+            { value: 'strawberry', label: 'Strawberry' },
+            { value: 'vanilla', label: 'Vanilla' }
+          ];
         this.Botones = this.Botones.bind(this);
         this.onGlobalFilterChangeProducto = this.onGlobalFilterChangeProducto.bind(this);
+        this.headerTemplate = this.headerTemplate.bind(this);
+        this.itemTemplate = this.itemTemplate.bind(this);
+    }
 
+
+    
+
+    //RENDERIZAR IMAGEN
+    Imagen(producto) {
+        return <div >
+            {producto.imagen
+                ? <img src={baseUrl + "files/" + producto.imagen} style={{ "width": "45px", "borderRadius": "10%" }} alt={producto.id} />
+                : <img src={baseUrl + "files/error.png"} style={{ "width": "45px", "borderRadius": "10%" }} alt={producto.id} />
+            }
+        </div>;
+    }
+
+    //RENDERIZAR INVENTARIO
+    Inventario(producto) {
+        return <div>
+            <h5>{!producto.inventario ? <Badge color="primary"> Tiene inventario</Badge> : <Badge color="danger">Sin inventario</Badge>}</h5>
+        </div>;
+    }
+
+    //RENDERIZAR VISIBLE
+    Visible(producto) {
+        return <div >
+            <h5>{producto.visible ? <Badge color="primary"> Es visible</Badge> : <Badge color="danger">No visible</Badge>}</h5>
+        </div>;
     }
 
     //RENDERIZAR BOTONES
     Botones(producto) {
         return <div className="btn-group btn-group-sm" role="group">
-             <button value={producto.id} className='btn btn-primary' onClick={() => { swal({title: "¿Desea editar al producto "+producto.nombre+"?",icon: "warning",buttons: ["Cancelar", "Editar"],dangerMode:true,}).then((respuesta) => {if(respuesta){this.seleccionarProducto(producto); this.modalEditarProducto()}});  }}><FontAwesomeIcon icon={faEdit} /></button>
-            <button className='btn btn-info' onClick={() => {  this.seleccionarProducto(producto); this.modalViewProducto() }} ><FontAwesomeIcon icon={faEye} /></button>
-            <button className='btn btn-danger' onClick={() => {swal({title: "¿Desea eliminar al producto "+producto.nombre+"?",icon: "warning",buttons: ["Cancelar", "Eliminar"],dangerMode:true,}).then((respuesta) => {if(respuesta){this.peticionEstadoProducto(producto)}});}}><FontAwesomeIcon icon={faTrashAlt} /></button>
+            <button value={producto.id} className='btn btn-primary' onClick={() => { swal({ title: "¿Desea editar al producto " + producto.nombre + "?", icon: "warning", buttons: ["Cancelar", "Editar"], dangerMode: true, }).then((respuesta) => { if (respuesta) { this.seleccionarProducto(producto); this.modalEditarProducto() } }); }}><FontAwesomeIcon icon={faEdit} /></button>
+            <button className='btn btn-info' onClick={() => { this.seleccionarProducto(producto); this.modalViewProducto() }} ><FontAwesomeIcon icon={faEye} /></button>
+            <button className='btn btn-danger' onClick={() => { swal({ title: "¿Desea eliminar al producto " + producto.nombre + "?", icon: "warning", buttons: ["Cancelar", "Eliminar"], dangerMode: true, }).then((respuesta) => { if (respuesta) { this.peticionEstadoProducto(producto) } }); }}><FontAwesomeIcon icon={faTrashAlt} /></button>
         </div>;
     }
 
@@ -222,15 +263,36 @@ export default class Producto extends Component {
             </div>
         )
     }
+    //EVENTOS DE SUBIR ARCHIVO
+    headerTemplate(options) {
+        const { className, chooseButton, cancelButton } = options;
+        const value = this.state.totalSize / 10000;
+        const formatedValue = this.fileUploadRef ? this.fileUploadRef.formatSize(this.state.totalSize) : '0 B';
+
+        return (
+            <div className={className} style={{ backgroundColor: 'transparent', display: 'flex', alignItems: 'center' }}>
+                {chooseButton}
+                {cancelButton}
+            </div>
+        );
+    }
+    itemTemplate(file, props) {
+        return (
+            <div style={{ width: '100%' }}>
+                <img alt={file.name} src={file.objectURL} width={"100%"} />
+            </div>
+        )
+    }
 
     render() {
-        const { editProducto, data ,datacategorias, datoscategoria } = this.state;
+        const { editProducto, data } = this.state;
         const header = this.renderHeaderProducto();
         const toggle = () => this.modalInsertarProducto();
         const toggle2 = () => this.modalEditarProducto();
         const toggle3 = () => this.modalViewProducto();
-        const categoria = () => this.setState({ categoria: !this.state.categoria });
-        const modelcategoria = () => this.setState({ modelcategoria: !this.state.modelcategoria });
+        const chooseOptions = { icon: 'pi pi-fw pi-images', iconOnly: true, className: 'btn-primary' };
+        const cancelOptions = { icon: 'pi pi-fw pi-times', iconOnly: true, className: 'btn-danger' };
+
         return (
             <div className="datatable-doc-demo">
                 <div className="flex justify-content-between align-items-center">
@@ -245,17 +307,17 @@ export default class Producto extends Component {
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         breakpoint="800px" paginator rows={10} rowsPerPageOptions={[10, 25, 50]} emptyMessage="Productos no encontrados..."
                         currentPageReportTemplate="Registro {first} - {last} de {totalRecords} Productos">
+                        <Column header="Imagen" body={this.Imagen} />
                         <Column field="nombre" header="Nombre" />
-                        <Column field="descripcion" header="Descripcion" />
-                        <Column field="imagen" header="Imagen" />
-                        <Column field="categoria" header="Categoria" />
-                        <Column field="estado" header="Botones" body={this.Botones} />
+                        <Column header="Inventario" body={this.Inventario} />
+                        <Column header="Visible" body={this.Visible} />
+                        <Column header="Botones" body={this.Botones} />
 
                     </DataTable>
                 </div>
 
                 {/* MODAL DE REGISTRAR */}
-                <Modal isOpen={this.state.modalInsertarProducto} toggle={toggle} size='lg'>
+                <Modal isOpen={this.state.modalInsertarProducto} toggle={toggle} >
                     <ModalHeader toggle={toggle}>
                         <span>Agregar Producto</span>
                         <button type="button" className="close" onClick={() => this.modalInsertarProducto()}>
@@ -268,64 +330,43 @@ export default class Producto extends Component {
 
                         <FormGroup>
                             <Row>
-                                <Col md={6}>
-                                    <Label htmlFor='contacto'>Contacto:</Label>
+                                <Col md={12}>
+                                    <Label htmlFor='contacto'>Nombre:</Label>
                                     <Input valid type='text' name='contacto' id='contacto' onChange={this.handleChangeProducto} />
                                     <FormText>
-                                        Nombre del contacto del producto.
+                                        Nombre del producto.
                                     </FormText>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
                                 </Col>
-                                <Col md={6}>
-                                    <Label htmlFor='direccion'>Dirección:</Label>
-                                    <Input invalid type='text' name='direccion' id='direccion' onChange={this.handleChangeProducto} />
-                                    <FormText>
-                                        Dirección del producto.
-                                    </FormText>
-                                    <FormFeedback>
-                                        Complete el campo
-                                    </FormFeedback>
-                                </Col>
-                            </Row>
-                        </FormGroup>
-
-                        <FormGroup>
-                            <Row>
-                                <Col md={6}>
-                                    <Label htmlFor='contacto'>Contacto:</Label>
-                                    <Input invalid type='text' name='contacto' id='contacto' onChange={this.handleChangeProducto} />
-                                    <FormText>
-                                        Nombre del contacto del producto.
-                                    </FormText>
-                                    <FormFeedback>
-                                        Complete el campo
-                                    </FormFeedback>
-                                </Col>
-                                <Col md={6}>
-                                    <Label htmlFor='direccion'>Dirección:</Label>
-                                    <Input invalid type='text' name='direccion' id='direccion' onChange={this.handleChangeProducto} />
-                                    <FormText>
-                                        Dirección del producto.
-                                    </FormText>
-                                    <FormFeedback>
-                                        Complete el campo
-                                    </FormFeedback>
-                                </Col>
-                            </Row>
-                        </FormGroup>
-                        <FormGroup>
-                            <Row>
                                 <Col md={12}>
-                                    <Label htmlFor='contacto'>Contacto:</Label>
-                                    <Input invalid type='text' name='contacto' id='contacto' onChange={this.handleChangeProducto} />
+                                    <Label htmlFor='descripcion'>Descripción:</Label>
+                                    <Input invalid type='text' name='descripcion' id='descripcion' onChange={this.handleChangeProducto} />
                                     <FormText>
-                                        Nombre del contacto del producto.
+                                        Descripción del producto.
                                     </FormText>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
+                                </Col>
+
+                                <Col md={12}>
+                                    <Label htmlFor='categoria'>Categoria:</Label>
+                                    <br />
+                                    <Select options={this.datacategorias} isMulti name='categoria' onChange={this.handleChangeProducto} />
+                                    <FormText>
+                                        Categoria del producto.
+                                    </FormText>
+                                    <FormFeedback>
+                                        Complete el campo
+                                    </FormFeedback>
+                                </Col>
+                                <Col md={12}>
+                                    <Label htmlFor='imagen'>Imagen:</Label>
+                                    <FileUpload name="files" accept="image/*" maxFileSize={1000000}
+                                        headerTemplate={this.headerTemplate} itemTemplate={this.itemTemplate}
+                                        chooseOptions={chooseOptions} cancelOptions={cancelOptions} />
                                 </Col>
                             </Row>
                         </FormGroup>
@@ -372,7 +413,7 @@ export default class Producto extends Component {
                 </Modal>
 
                 {/* MODAL DE VISTA */}
-                <Modal isOpen={this.state.modalViewProducto} toggle={() => { toggle3(); this.setState({ datacategorias: [], categoria: false }) }}>
+                <Modal isOpen={this.state.modalViewProducto} toggle={toggle3}>
                     <ModalHeader >
                         <div><br /><h3>Producto {editProducto.nombre}</h3></div>
                         <button type="button" className="close" onClick={() => this.modalViewProducto()}>
@@ -388,99 +429,50 @@ export default class Producto extends Component {
                                             <p>Nombre:</p> <h5>{editProducto.nombre}</h5>
                                         </ListGroupItem>
                                         <ListGroupItem>
-                                            <p>Descrpción:</p> <h5>{editProducto.descripcion}</h5>
+                                            <p>Descrpción:</p> <h5>{editProducto.descripcion ? editProducto.descripcion : <Badge color="secondary">Sin Descripción</Badge>}</h5>
                                         </ListGroupItem>
                                         <ListGroupItem>
-                                            <p>Visible:</p> <h5>{editProducto.visible ? "Visible" : "No visible"}</h5>
+                                            <p>Inventario:</p> {!editProducto.inventario ? <Badge color="primary"> Tiene inventario</Badge> : <Badge color="danger">Sin inventario</Badge>}
                                         </ListGroupItem>
                                         <ListGroupItem>
-                                            <p>Categoria:</p> <h5>{editProducto.categoria}</h5>
+                                            <p>Visible:</p> {editProducto.visible ? <Badge color="primary"> Es visible</Badge> : <Badge color="danger">No visible</Badge>}
                                         </ListGroupItem>
-                                        <ListGroupItem>
-                                            <p>Inventario:</p> <h5>{editProducto.inventario}</h5>
-                                        </ListGroupItem>
-                                        
-                                        
-                                        
 
                                         <ListGroupItem>
-                                            <div>
-                                                <Button color="primary" onClick={() => { this.peticionGetCategoria(editProducto.id); categoria() }} >
-                                                    Categoria de {editProducto.nombre}
-                                                </Button>
+                                            <p>Categoria:</p>
+                                            <ListGroup>
+                                                {editProducto.categoria.length > 0 ?
+                                                    editProducto.categoria.map((categoria, index) => {
+                                                        return (
+                                                            <ListGroupItem key={index}>
+                                                                <p >{categoria}</p>
+                                                            </ListGroupItem>
+                                                        )
+                                                    }) :
 
-                                            </div>
+                                                    <Alert color="primary">
+                                                        No hay categorias registradas con el producto
+                                                    </Alert>
+                                                }
+                                            </ListGroup>
                                         </ListGroupItem>
-                                        <ListGroupItem>
-                                            <Collapse horizontal isOpen={this.state.categoria}>
-                                                <ListGroup>
-                                                    {datacategorias.length > 0 ?
-                                                        datacategorias.map((categoria, index) => {
-                                                            return (
-                                                                <ListGroupItem action key={index} onClick={() => { modelcategoria(); this.pasarCategoria(categoria) }} style={{ "cursor": "pointer" }}>
-                                                                    <div style={{ "display": "flex", "justifyContent": "space-between" }}>
-                                                                        {/* {categoria.imagen ?
-                                                                            <img src={baseUrl + "files/" + categoria.imagen} style={stiloimg} alt={categoria.id} />
-                                                                            : <img src={baseUrl + "files/error.png"} style={stiloimg} alt={categoria.id} />
-                                                                        } */}
 
-                                                                        <p>{categoria.nombre}</p>
-                                                                    </div>
-                                                                </ListGroupItem>
-                                                            )
-                                                        }) :
 
-                                                        <Alert color="primary">
-                                                            No hay insumos registrados con el producto
-                                                        </Alert>
-                                                    }
-                                                </ListGroup>
-                                            </Collapse>
-                                        </ListGroupItem>
                                     </ListGroup>
                                 </Col>
 
                             </Row>
-                            <Modal isOpen={this.state.modelcategoria} toggle={modelcategoria} centered>
-                                <ModalHeader toggle={modelcategoria}>
-                                    <div><br /><h3>{datoscategoria.nombre}</h3></div>
-                                    <button type="button" className="close" onClick={modelcategoria}>
-                                        <FontAwesomeIcon icon={faClose} />
-                                    </button>
-                                </ModalHeader>
-                                <ModalBody>
-                                    <ListGroup>
-                                        <ListGroupItem style={{"display":"flex", "justifyContent": "center"}}>
-                                            {datoscategoria.imagen
-                                                ? <img src={baseUrl + "files/" + datoscategoria.imagen} style={{"width" : "70%", "borderRadius": "10%"}} alt={datoscategoria.id} />
-                                                : <img src={baseUrl + "files/error.png"} style={{"width" : "70%", "borderRadius": "10%"}} alt={datoscategoria.id} />
-                                            }
 
-                                        </ListGroupItem>
-                                        <ListGroupItem>
-                                            <p>Nombre:</p> <h5>{datoscategoria.nombre}</h5>
-                                        </ListGroupItem>
-                                        <ListGroupItem>
-                                            <p>Filtro:</p> <h5>{datoscategoria.filtro}</h5>
-                                        </ListGroupItem>
-                                    </ListGroup>
-                                </ModalBody>
-                                <ModalFooter>
-                                    <Button color="secondary" onClick={modelcategoria}>
-                                        Cerrar
-                                    </Button>
-                                </ModalFooter>
-                            </Modal>
                         </FormGroup>
                     </ModalBody>
 
                     <ModalFooter>
-                        <button className='btn btn-primary' onClick={() => { this.modalViewProducto(); this.setState({ datainsumos: [], insumo: false  }) }}>
+                        <button className='btn btn-primary' onClick={() => { this.modalViewProducto(); this.setState({ datainsumos: [], insumo: false }) }}>
                             Cerrar
                         </button>
                     </ModalFooter>
                 </Modal>
-            </div>
+            </div >
         );
     }
 
