@@ -38,14 +38,14 @@ export default class Usuario extends Component {
   }
 
   //PETICIÓN GET CargoS
-  peticionGetCargo = (id) => {
-    axios.get(url + 'cargo/' + id, autorizacion).then(response => {
-      this.setState({ datacargos: response.data });
-    }).catch(error => {
-      console.log(error.message);
-      swal({ title: "ERROR AL CONSULTAR CARGOS", text: " ", icon: "error", buttons: false, timer: 1500 })
-    })
-  }
+  // peticionGetCargo = (id) => {
+  //   axios.get(url + 'cargo/' + id, autorizacion).then(response => {
+  //     this.setState({ datacargos: response.data });
+  //   }).catch(error => {
+  //     console.log(error.message);
+  //     swal({ title: "ERROR AL CONSULTAR CARGOS", text: " ", icon: "error", buttons: false, timer: 1500 })
+  //   })
+  // }
 
 
   //PETICIÓN POST
@@ -213,7 +213,7 @@ export default class Usuario extends Component {
   //RENDERIZAR BOTONES
   Botones(usuario) {
     return <div className="btn-group btn-group-sm" role="group">
-      <button value={usuario.id} className='btn btn-primary' onClick={() => { swal({ title: "¿Desea editar al usuario " + usuario.nombre + "?", icon: "warning", buttons: ["Cancelar", "Editar"], dangerMode: true, }).then((respuesta) => { if (respuesta) { this.seleccionarUsuario(usuario); this.modalEditarUsuario() } }); }}><FontAwesomeIcon icon={faEdit} /></button>
+      <button value={usuario.id} className='btn btn-primary' onClick={() => { swal({ title: "¿Desea editar al usuario" + usuario.nombre + "?", icon: "warning", buttons: ["Cancelar", "Editar"], dangerMode: true, }).then((respuesta) => { if (respuesta) { this.seleccionarUsuario(usuario); this.modalEditarUsuario() } }); }}><FontAwesomeIcon icon={faEdit} /></button>
       <button className='btn btn-info' onClick={() => { this.seleccionarUsuario(usuario); this.modalViewUsuario() }} ><FontAwesomeIcon icon={faEye} /></button>
       <button className='btn btn-danger' onClick={() => { swal({ title: "¿Desea eliminar al usuario " + usuario.nombre + "?", icon: "warning", buttons: ["Cancelar", "Eliminar"], dangerMode: true, }).then((respuesta) => { if (respuesta) { this.peticionEstadoUsuario(usuario) } }); }}><FontAwesomeIcon icon={faTrashAlt} /></button>
     </div>;
@@ -250,6 +250,7 @@ export default class Usuario extends Component {
     const toggle3 = () => this.modalViewUsuario();
     const cargo = () => this.setState({ cargo: !this.state.cargo });
     const modelcargo = () => this.setState({ modelcargo: !this.state.modelcargo });
+   
     return (
       <div className="datatable-doc-demo">
         <div className="flex justify-content-between align-items-center">

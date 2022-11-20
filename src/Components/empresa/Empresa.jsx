@@ -11,7 +11,14 @@ import { Alert, Badge, Button, Collapse, ListGroup, ListGroupItem } from 'reacts
 import { Col, FormFeedback, FormGroup, FormText, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 import { InputText } from 'primereact/inputtext';
 import swal from 'sweetalert';
+
+import 'primeicons/primeicons.css';
+import 'primereact/resources/themes/lara-light-indigo/theme.css';
+import 'primereact/resources/primereact.css';
+import 'primeflex/primeflex.css';
+
 const url = baseUrl + "empresa/";
+
 
 export default class Empresa extends Component {
 
@@ -23,6 +30,8 @@ export default class Empresa extends Component {
             console.log(response)
             this.setState({ data: response.data, loading: false });
         }).catch(error => {
+            this.setState({ loading: false });
+            swal({title: "ERROR AL CONSULTAR", text: " ",icon: "error",buttons:false, timer:1500})
             console.log(error.message);
         })
     }
@@ -51,7 +60,7 @@ export default class Empresa extends Component {
     }
     //PETICIÓN PUT
     peticionPutEmpresa = () => {
-        axios.put(url + this.state.editempresa.id, this.state.editempresa, autorizacion).then(response => {
+        axios.put(url + this.state.editEmpresa.id, this.state.editEmpresa, autorizacion).then(response => {
             this.modalEditarEmpresa();
             this.peticionGetEmpresa();
             swal({title: "Empresa "+response.data.nombre+" editado", text: " ",icon: "success",buttons:false, timer:1500})
@@ -88,7 +97,7 @@ export default class Empresa extends Component {
     //SELECCIONAR EMPRESA PARA EDICIÓN
     seleccionarEmpresa = (empresa) => {
         this.setState({
-            editempresa: {
+            editEmpresa: {
                 nombre: empresa.nombre,
                 contacto: empresa.contacto,
                 telefono: empresa.telefono,
@@ -111,17 +120,17 @@ export default class Empresa extends Component {
         });
         console.log(this.state.empresa);
     }
-    //INGRESO DE DATOS AL EDITempresa
+    //INGRESO DE DATOS AL EDITEmpresa
 
     handleChangeEditEmpresa = async e => {
         e.persist();
         await this.setState({
-            editempresa: {
-                ...this.state.editempresa,
+            editEmpresa: {
+                ...this.state.editEmpresa,
                 [e.target.name]: e.target.value
             }
         });
-        console.log(this.state.editempresa);
+        console.log(this.state.editEmpresa);
     }
     //FUNCION DE ARRANQUE
     componentDidMount() {
@@ -148,7 +157,7 @@ export default class Empresa extends Component {
             imagen: '',
             especialidad: 0
         },
-        editempresa: {
+        editEmpresa: {
             id:'',
             nombre: '',
             contacto: '',
@@ -203,7 +212,7 @@ export default class Empresa extends Component {
     }
 
     render() {
-        const { editempresa, data,  dataespecialidad } = this.state;
+        const { editEmpresa, data,  dataespecialidad } = this.state;
         const header = this.renderHeader();
         const toggle = () => this.modalInsertarEmpresa();
         const toggle2 = () => this.modalEditarEmpresa();
@@ -226,7 +235,7 @@ export default class Empresa extends Component {
                         <Column field="nombre" header="Nombre" />
                         <Column field="contacto" header="Contacto" />
                         <Column field="telefono" header="Telefono" />
-                        <Column field="dirreccion" header="Direccion" />
+                        <Column field="direccion" header="Direccion" />
                         <Column field="email" header="Email" />
                         <Column field="imagen" header="Imagen" />
                         <Column field="especialidad" header="Especialidad" />
@@ -338,14 +347,14 @@ export default class Empresa extends Component {
                                 <Row>
                                 <Col md={6}>
                                     <Label htmlFor='nombre'>Nombre:</Label>
-                                    <Input valid type='text' name='nombre' id='nombre' onChange={this.handleChangeEditEmpresa} value={editempresa.nombre || ''}/>
+                                    <Input valid type='text' name='nombre' id='nombre' onChange={this.handleChangeEditEmpresa} value={editEmpresa.nombre || ''}/>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
                                 </Col>
                                 <Col md={6}>
                                     <Label htmlFor='contacto'>Contacto:</Label>
-                                    <Input invalid type='text' name='contacto' id='contacto' onChange={this.handleChangeEditEmpresa} value={editempresa.contacto || ''}/>
+                                    <Input invalid type='text' name='contacto' id='contacto' onChange={this.handleChangeEditEmpresa} value={editEmpresa.contacto || ''}/>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
@@ -357,7 +366,7 @@ export default class Empresa extends Component {
                                 <Row>
                                 <Col md={6}>
                                     <Label htmlFor='telefono'>Telefono:</Label>
-                                    <Input invalid type='text' name='telefono' id='telefono' onChange={this.handleChangeEditEmpresa} value={editempresa.telefono || ''} />
+                                    <Input invalid type='text' name='telefono' id='telefono' onChange={this.handleChangeEditEmpresa} value={editEmpresa.telefono || ''} />
                                     
                                     <FormFeedback>
                                         Complete el campo
@@ -365,7 +374,7 @@ export default class Empresa extends Component {
                                 </Col>
                                 <Col md={6}>
                                     <Label htmlFor='direccion'>Dirección:</Label>
-                                    <Input invalid type='text' name='direccion' id='direccion' onChange={this.handleChangeEditEmpresa} value={editempresa.direccion || ''}/>
+                                    <Input invalid type='text' name='direccion' id='direccion' onChange={this.handleChangeEditEmpresa} value={editEmpresa.direccion || ''}/>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
@@ -376,7 +385,7 @@ export default class Empresa extends Component {
                                 <Row>
                                 <Col md={6}>
                                     <Label htmlFor='email'>Email:</Label>
-                                    <Input invalid type='text' name='email' id='email' onChange={this.handleChangeEditEmpresa} value={editempresa.contacto || ''}/>
+                                    <Input invalid type='text' name='email' id='email' onChange={this.handleChangeEditEmpresa} value={editEmpresa.email || ''}/>
                                     
                                     <FormFeedback>
                                         Complete el campo
@@ -384,7 +393,7 @@ export default class Empresa extends Component {
                                 </Col>
                                 <Col md={6}>
                                     <Label htmlFor='imagen'>Imagen:</Label>
-                                    <Input invalid type='text' name='imagen' id='imagen' onChange={this.handleChangeEditEmpresa} value={editempresa.imagen || ''}/>
+                                    <Input invalid type='text' name='imagen' id='imagen' onChange={this.handleChangeEditEmpresa} value={editEmpresa.imagen || ''}/>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
@@ -395,7 +404,7 @@ export default class Empresa extends Component {
                                 <Row>
                                 <Col md={12}>
                                     <Label htmlFor='especialidad'>Especialidad:</Label>
-                                    <Input invalid type='text' name='especialidad' id='especialidad' onChange={this.handleChangeEmpresa} value={editempresa.especialidad || ''} />
+                                    <Input invalid type='text' name='especialidad' id='especialidad' onChange={this.handleChangeEmpresa} value={editEmpresa.especialidad || ''} />
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
@@ -415,7 +424,7 @@ export default class Empresa extends Component {
                 {/* MODAL DE VISTA EMPRESA */}
                 <Modal isOpen={this.state.modalViewEmpresa} toggle={() => { toggle3(); this.setState({ dataespecialidad: [], especialidad: false }) }}>
                     <ModalHeader >
-                        <div><br /><h3>Empresa {editempresa.nombre}</h3></div>
+                        <div><br /><h3>Empresa {editEmpresa.nombre}</h3></div>
                         <button type="button" className="close" onClick={() => this.modalViewEmpresa()}>
                             <FontAwesomeIcon icon={faClose} />
                         </button>
@@ -426,31 +435,31 @@ export default class Empresa extends Component {
                                 <Col md={12} >
                                     <ListGroup flush>
                                         <ListGroupItem>
-                                            <p>Nombre:</p> <h5>{editempresa.nombre}</h5>
+                                            <p>Nombre:</p> <h5>{editEmpresa.nombre}</h5>
                                         </ListGroupItem>
                                         <ListGroupItem>
-                                            <p>Contacto:</p> <h5>{editempresa.contacto}</h5>
+                                            <p>Contacto:</p> <h5>{editEmpresa.contacto}</h5>
                                         </ListGroupItem>
                                         <ListGroupItem>
-                                            <p>Dirección:</p> <h5>{editempresa.direccion}</h5>
+                                            <p>Dirección:</p> <h5>{editEmpresa.direccion}</h5>
                                         </ListGroupItem>
                                         <ListGroupItem>
-                                            <p>Teléfono:</p><h5>{editempresa.telefono}</h5>
+                                            <p>Teléfono:</p><h5>{editEmpresa.telefono}</h5>
                                         </ListGroupItem>
                                         <ListGroupItem>
-                                            <p>Email:</p> <h5>{editempresa.email}</h5>
+                                            <p>Email:</p> <h5>{editEmpresa.email}</h5>
                                         </ListGroupItem>
                                         <ListGroupItem>
-                                            <p>Imagen:</p> <h5>{editempresa.imagen}</h5>
+                                            <p>Imagen:</p> <h5>{editEmpresa.imagen}</h5>
                                         </ListGroupItem>
                                         <ListGroupItem>
-                                            <p>Especialidad:</p> <h5>{editempresa.especialidad}</h5>
+                                            <p>Especialidad:</p> <h5>{editEmpresa.especialidad}</h5>
                                         </ListGroupItem>
 
                                         <ListGroupItem>
                                             <div>
-                                                <Button color="primary" onClick={() => { this.peticionGetEspecialidad(editempresa.id); especialidad() }} >
-                                                    especialidads de {editempresa.nombre}
+                                                <Button color="primary" onClick={() => { this.peticionGetEspecialidad(editEmpresa.id); especialidad() }} >
+                                                    especialidads de {editEmpresa.nombre}
                                                 </Button>
 
                                             </div>
