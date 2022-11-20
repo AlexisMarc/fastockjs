@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { InputText } from 'primereact/inputtext';
@@ -10,7 +10,7 @@ import Select from 'react-select'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClose, faEdit, faEye, faPlus, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { Alert, Badge, Button, Col, Collapse, Dropdown, FormFeedback, FormGroup, FormText, Input, Label, ListGroup, ListGroupItem, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
-import { autorizacion, baseUrl } from '../../Utils/Api';
+import { autorizacion, baseUrl, autorizacionFiles } from '../../Utils/Api';
 import swal from 'sweetalert';
 
 
@@ -40,14 +40,14 @@ export default class Producto extends Component {
     //PETICIÓN GET CATEGORIA
     peticionGetCategoria = () => {
         axios.get(url + 'categoria/', autorizacion).then(response => {
-            let array = [];
-            response.data.map((categoria)=>{
-                let dato ={value: categoria.id, label: categoria.nombre}
-                array.push(dato)
+            const datos = [];
+
+            response.data.map((categoria) => {
+                const dato = { value: categoria.id, label: categoria.nombre }
+                datos.push(dato);
             })
-            
-            this.setState({ datacategorias: array });
-            console.log(array);
+
+            this.setState({ datacategorias: datos });
         }).catch(error => {
             console.log(error.message);
             swal({ title: "ERROR AL CONSULTAR CATEGORIAS", text: " ", icon: "error", buttons: false, timer: 1500 })
@@ -55,6 +55,23 @@ export default class Producto extends Component {
     }
     //PETICION POST
     peticionPostProducto = async () => {
+        var imagen = null
+        if (this.state.files != null) {
+            var bodyFormData = new FormData();
+            bodyFormData.append('files', this.state.files);
+            await axios.post(baseUrl + "files/upload", bodyFormData, autorizacionFiles).then(response => {
+                console.log("Subio el archivo")
+                imagen = response.data.message
+                console.log(imagen);
+
+            }).catch(error => {
+                console.log(error.message);
+            })
+        }
+
+        this.state.producto.imagen = imagen;
+
+        console.log(this.state.producto);
 
         await axios.post(url, this.state.producto, autorizacion).then(response => {
             this.modalInsertarProducto();
@@ -87,7 +104,7 @@ export default class Producto extends Component {
         })
     }
 
-    // //MODAL DE INSERTAR
+    //MODAL DE INSERTAR
 
     modalInsertarProducto = () => {
         this.setState({ modalInsertarProducto: !this.state.modalInsertarProducto });
@@ -113,6 +130,7 @@ export default class Producto extends Component {
                 id: producto.id,
                 nombre: producto.nombre,
                 descripcion: producto.descripcion,
+                inventario: producto.inventario,
                 imagen: producto.imagen,
                 categoria: producto.categoria,
                 estado: producto.estado
@@ -142,6 +160,22 @@ export default class Producto extends Component {
         });
         console.log(this.state.producto);
     }
+    //INGRESO DE FILES
+    handleChangeFiles = (e) => {
+        this.setState({
+            files: e.target.files[0],
+        })
+    }
+
+    //INGRESO DE DATOS AL FORM
+    handleChangeCategoria = (e) => {
+        const lista = []
+        e.map((e) => { lista.push(e.value) });
+
+        this.state.producto.categoria = lista;
+
+        console.log(this.state.producto);
+    }
 
     //INGRESO DE DATOS AL editProducto
     handleChangeProductoEditProducto = async e => {
@@ -155,6 +189,8 @@ export default class Producto extends Component {
         console.log(this.state.editProducto);
     }
 
+
+
     //FUNCION DE ARRANQUE
     componentDidMount() {
         this.peticionGetProducto();
@@ -166,25 +202,25 @@ export default class Producto extends Component {
         super(props);
         this.state = {
             data: [],
-            selectedItems2: null,
+            files: null,
             modalInsertarProducto: false,
             modalEditarProducto: false,
             modalViewProducto: false,
             datacategorias: [],
-            selectedCategorias: [],
             producto: {
                 nombre: '',
                 descripcion: '',
-                imagen: '',
-                categoria: null
+                imagen: null,
+                categoria: []
             },
             editProducto: {
                 id: '',
                 nombre: '',
                 descripcion: '',
-                imagen: '',
+                imagen: null,
                 categoria: [],
                 estado: '',
+                inventario: null,
                 visible: ''
             },
             customers: null,
@@ -199,7 +235,7 @@ export default class Producto extends Component {
             { value: 'chocolate', label: 'Chocolate' },
             { value: 'strawberry', label: 'Strawberry' },
             { value: 'vanilla', label: 'Vanilla' }
-          ];
+        ];
         this.Botones = this.Botones.bind(this);
         this.onGlobalFilterChangeProducto = this.onGlobalFilterChangeProducto.bind(this);
         this.headerTemplate = this.headerTemplate.bind(this);
@@ -207,7 +243,7 @@ export default class Producto extends Component {
     }
 
 
-    
+
 
     //RENDERIZAR IMAGEN
     Imagen(producto) {
@@ -265,13 +301,12 @@ export default class Producto extends Component {
     }
     //EVENTOS DE SUBIR ARCHIVO
     headerTemplate(options) {
-        const { className, chooseButton, cancelButton } = options;
-        const value = this.state.totalSize / 10000;
-        const formatedValue = this.fileUploadRef ? this.fileUploadRef.formatSize(this.state.totalSize) : '0 B';
+        const { className, chooseButton, cancelButton, uploadButton } = options;
 
         return (
             <div className={className} style={{ backgroundColor: 'transparent', display: 'flex', alignItems: 'center' }}>
                 {chooseButton}
+                {uploadButton}
                 {cancelButton}
             </div>
         );
@@ -285,19 +320,20 @@ export default class Producto extends Component {
     }
 
     render() {
-        const { editProducto, data } = this.state;
+        const { editProducto, data, datacategorias } = this.state;
         const header = this.renderHeaderProducto();
         const toggle = () => this.modalInsertarProducto();
         const toggle2 = () => this.modalEditarProducto();
         const toggle3 = () => this.modalViewProducto();
         const chooseOptions = { icon: 'pi pi-fw pi-images', iconOnly: true, className: 'btn-primary' };
+        const uploadOptions = { icon: 'pi pi-fw pi-cloud-upload', iconOnly: true, className: 'custom-upload-btn p-button-success p-button-rounded p-button-outlined' };
         const cancelOptions = { icon: 'pi pi-fw pi-times', iconOnly: true, className: 'btn-danger' };
 
         return (
             <div className="datatable-doc-demo">
                 <div className="flex justify-content-between align-items-center">
                     <h5 className="m-0 h5">Producto</h5>
-                    <button className='btn btn-primary' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertarProducto() }} ><FontAwesomeIcon icon={faPlus} style={{ "marginRight": "1rem" }} /><span className='menu-title'>Agregar</span></button>
+                    <button className='btn btn-primary' onClick={() => { this.setState({ producto: null, files: null }); this.modalInsertarProducto() }} ><FontAwesomeIcon icon={faPlus} style={{ "marginRight": "1rem" }} /><span className='menu-title'>Agregar</span></button>
                 </div>
                 <br />
                 <div className='card'>
@@ -331,8 +367,8 @@ export default class Producto extends Component {
                         <FormGroup>
                             <Row>
                                 <Col md={12}>
-                                    <Label htmlFor='contacto'>Nombre:</Label>
-                                    <Input valid type='text' name='contacto' id='contacto' onChange={this.handleChangeProducto} />
+                                    <Label htmlFor='nombre'>Nombre:</Label>
+                                    <Input valid type='text' name='nombre' id='nombre' onChange={this.handleChangeProducto} />
                                     <FormText>
                                         Nombre del producto.
                                     </FormText>
@@ -354,19 +390,21 @@ export default class Producto extends Component {
                                 <Col md={12}>
                                     <Label htmlFor='categoria'>Categoria:</Label>
                                     <br />
-                                    <Select options={this.datacategorias} isMulti name='categoria' onChange={this.handleChangeProducto} />
+                                    <Select options={datacategorias} isMulti name='categoria' onChange={this.handleChangeCategoria} placeholder="Seleccione la categoria" />
                                     <FormText>
                                         Categoria del producto.
                                     </FormText>
                                     <FormFeedback>
-                                        Complete el campo
+                                        Complete inventarioel campo
                                     </FormFeedback>
                                 </Col>
                                 <Col md={12}>
+                                    <br></br>
                                     <Label htmlFor='imagen'>Imagen:</Label>
-                                    <FileUpload name="files" accept="image/*" maxFileSize={1000000}
-                                        headerTemplate={this.headerTemplate} itemTemplate={this.itemTemplate}
-                                        chooseOptions={chooseOptions} cancelOptions={cancelOptions} />
+                                    <input type="file" name="files" onChange={this.handleChangeFiles} />
+                                   
+
+                                   
                                 </Col>
                             </Row>
                         </FormGroup>
@@ -425,11 +463,18 @@ export default class Producto extends Component {
                             <Row>
                                 <Col md={12} >
                                     <ListGroup flush>
+                                    <ListGroupItem style={{"display":"flex", "justifyContent": "center"}}>
+                                            {editProducto.imagen
+                                                ? <img src={baseUrl + "files/" + editProducto.imagen} style={{"width" : "70%", "borderRadius": "10%"}} alt={editProducto.id} />
+                                                : <img src={baseUrl + "files/error.png"} style={{"width" : "70%", "borderRadius": "10%"}} alt={editProducto.id} />
+                                            }
+
+                                        </ListGroupItem>
                                         <ListGroupItem>
                                             <p>Nombre:</p> <h5>{editProducto.nombre}</h5>
                                         </ListGroupItem>
                                         <ListGroupItem>
-                                            <p>Descrpción:</p> <h5>{editProducto.descripcion ? editProducto.descripcion : <Badge color="secondary">Sin Descripción</Badge>}</h5>
+                                            <p>Descripción:</p> <h5>{editProducto.descripcion ? editProducto.descripcion : <Badge color="secondary">Sin Descripción</Badge>}</h5>
                                         </ListGroupItem>
                                         <ListGroupItem>
                                             <p>Inventario:</p> {!editProducto.inventario ? <Badge color="primary"> Tiene inventario</Badge> : <Badge color="danger">Sin inventario</Badge>}

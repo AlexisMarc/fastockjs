@@ -13,5 +13,6 @@ export const CerrarSesion = () => {
 }
 
 const autorizacion = { headers: {"Authorization" : `Bearer ${cookies.get('token')}`} };
+const autorizacionFiles = { headers: {"Authorization" : `Bearer ${cookies.get('token')}`,'Content-Type':'multipart/form-data'}};
 
-export { baseUrl, autorizacion};
+export { baseUrl, autorizacion,autorizacionFiles };
