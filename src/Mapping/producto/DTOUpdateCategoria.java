@@ -16,10 +16,6 @@ public class DTOUpdateCategoria {
     // -----------------------ESTADO-----------------------//
     @NotNull(message = "El estado no debe estar vacío")
     private Boolean estado;
-    // -----------------------FILTRO-----------------------//
-    @NotEmpty(message = "El filtro no debe estar vacío")
-    @Size(min = 2, max = 20)
-    private String filtro;
 
     // ************************************************//
     // -------------Constructores---------------//
@@ -29,12 +25,10 @@ public class DTOUpdateCategoria {
 
     public DTOUpdateCategoria(@NotNull(message = "El ID no debe estar vacío") Integer id,
             @NotEmpty(message = "El nombre no debe estar vacío") @Size(min = 2, max = 60, message = "El nombre debe tener entre 2 y 60 caracteres") String nombre,
-            @NotNull(message = "El estado no debe estar vacío") Boolean estado,
-            @NotEmpty(message = "El filtro no debe estar vacío") @Size(min = 2, max = 20) String filtro) {
+            @NotNull(message = "El estado no debe estar vacío") Boolean estado) {
         this.id = id;
         this.nombre = nombre;
         this.estado = estado;
-        this.filtro = filtro;
     }
 
     public Integer getId() {
@@ -59,14 +53,6 @@ public class DTOUpdateCategoria {
 
     public void setEstado(Boolean estado) {
         this.estado = estado;
-    }
-
-    public String getFiltro() {
-        return filtro;
-    }
-
-    public void setFiltro(String filtro) {
-        this.filtro = filtro;
     }
 
 }

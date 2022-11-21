@@ -29,7 +29,6 @@ root.render(
         <Route path='/inventario' element={<PageInventario />} />
         <Route path='/inventariopro' element={<PageInventarioPro />} />
         <Route path='/prueba' element={<PageInsumo />} />
-        {/* <Route path='/slider' element={<Slider1 />} /> */}
         <Route path='*' element={<Error/>} />
       </Routes>
     </BrowserRouter>

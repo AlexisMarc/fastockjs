@@ -1,3 +1,12 @@
+import '../css/animate.min.css'
+import '../css/boostrap.min.css'
+import '../css/flexslider.css'
+import '../css/font-icon.css'
+import '../css/jquery.fancybox.css'
+import '../css/login.css'
+import '../css/main.css'
+import '../css/responsive.css'
+import '../css/style.css'
 
 function Galeria() {
 
@@ -6,7 +15,7 @@ function Galeria() {
             <div className="container-fluid">
                 <div className="section-header">
                     <h2 className="wow fadeInDown animated">Galería</h2>
-                    <p className="wow fadeInDown animated">Conose nuestro catalogo de ropa, con una nueva colección</p>
+                    <p className="wow fadeInDown animated">Conose nuestro catalogo de rapa, con una nueva colección</p>
                 </div>
                 <div className="row no-gutter">
                     <div className="col-lg-3 col-md-6 col-sm-6 work"> <a href="images/portfolio/01.jpg" className="work-box"> <img

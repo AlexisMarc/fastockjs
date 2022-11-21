@@ -13,7 +13,6 @@
 }
 .cb-slideshow:after {
     content: '';
-    background: transparent url(../images/pattern.png) repeat top left;
 }
 .cb-slideshow li span {
     width: 100%;
@@ -72,7 +71,6 @@
     animation-delay: 12s;
 }
 .cb-slideshow li:nth-child(4) span {
-    background-image: url(../images/slides/4.jpg);
     -webkit-animation-delay: 18s;
     -moz-animation-delay: 18s;
     -o-animation-delay: 18s;
@@ -80,7 +78,6 @@
     animation-delay: 18s;
 }
 .cb-slideshow li:nth-child(5) span {
-    background-image: url(../images/slides/5.jpg);
     -webkit-animation-delay: 24s;
     -moz-animation-delay: 24s;
     -o-animation-delay: 24s;
@@ -88,7 +85,6 @@
     animation-delay: 24s;
 }
 .cb-slideshow li:nth-child(6) span {
-    background-image: url(../images/slides/6.jpg);
     -webkit-animation-delay: 30s;
     -moz-animation-delay: 30s;
     -o-animation-delay: 30s;

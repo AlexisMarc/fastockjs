@@ -6,7 +6,7 @@ function Menu() {
         <nav className="sidebar sidebar-offcanvas" id="sidebar">
             <ul className="nav">
                 <li className="nav-item">
-                    <Link className="nav-link" to="/">
+                    <Link className="nav-link" to="/inicio">
                         <i className="ti-home menu-icon"></i>
                         <span className="menu-title">Inicio</span>
                     </Link>

@@ -1,12 +1,10 @@
 import '../css/animate.min.css'
-import '../css/boostrap.min.css'
 import '../css/flexslider.css'
 import '../css/font-icon.css'
 import '../css/jquery.fancybox.css'
 import '../css/login.css'
 import '../css/main.css'
 import '../css/responsive.css'
-import '../css/style.css'
 
 function Footerh() {
 

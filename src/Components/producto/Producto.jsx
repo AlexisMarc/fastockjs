@@ -35,8 +35,6 @@ export default class Producto extends Component {
         })
     }
 
-
-
     //PETICIÓN GET CATEGORIA
     peticionGetCategoria = () => {
         axios.get(url + 'categoria/', autorizacion).then(response => {
@@ -53,29 +51,37 @@ export default class Producto extends Component {
             swal({ title: "ERROR AL CONSULTAR CATEGORIAS", text: " ", icon: "error", buttons: false, timer: 1500 })
         })
     }
+
     //PETICION POST
     peticionPostProducto = async () => {
-        var imagen = null
+        var img = null;
         if (this.state.files != null) {
             var bodyFormData = new FormData();
             bodyFormData.append('files', this.state.files);
             await axios.post(baseUrl + "files/upload", bodyFormData, autorizacionFiles).then(response => {
-                console.log("Subio el archivo")
-                imagen = response.data.message
-                console.log(imagen);
-
+                img = response.data.message;
             }).catch(error => {
                 console.log(error.message);
             })
         }
-
-        this.state.producto.imagen = imagen;
-
-        console.log(this.state.producto);
+        this.state.producto.imagen = img;
 
         await axios.post(url, this.state.producto, autorizacion).then(response => {
             this.modalInsertarProducto();
             this.peticionGetProducto();
+
+        }).catch(error => {
+            console.log(error.message);
+        })
+
+    }
+
+    //PETICION POST CATEGORIA
+    peticionPostCategoria = async () => {
+
+        await axios.post(url + "categoria", this.state.categoria, autorizacion).then(response => {
+            this.modalInsertarCategoria();
+            this.peticionGetCategoria();
 
         }).catch(error => {
             console.log(error.message);
@@ -105,12 +111,14 @@ export default class Producto extends Component {
     }
 
     //MODAL DE INSERTAR
-
     modalInsertarProducto = () => {
         this.setState({ modalInsertarProducto: !this.state.modalInsertarProducto });
     }
 
-
+    //MODAL DE INSERTAR CATEGORIA
+    modalInsertarCategoria = () => {
+        this.setState({ modalInsertarCategoria: !this.state.modalInsertarCategoria });
+    }
 
     //MODAL DE EDITAR
     modalEditarProducto = () => {
@@ -121,7 +129,6 @@ export default class Producto extends Component {
     modalViewProducto = () => {
         this.setState({ modalViewProducto: !this.state.modalViewProducto });
     }
-
 
     //SELECCIONAR producto PARA EDICIÓN
     seleccionarProducto = (producto) => {
@@ -167,17 +174,35 @@ export default class Producto extends Component {
         })
     }
 
-    //INGRESO DE DATOS AL FORM
-    handleChangeCategoria = (e) => {
+    //INGRESO DE DATOS DE CATEGORIA AL PRODUCTO
+    handleChangeCategoria = async (e) => {
+
         const lista = []
         e.map((e) => { lista.push(e.value) });
 
-        this.state.producto.categoria = lista;
+        await this.setState({
+            producto: {
+                ...this.state.producto,
+                categoria: lista
+            }
+        });
 
         console.log(this.state.producto);
     }
 
-    //INGRESO DE DATOS AL editProducto
+    //INGRESO DE DATOS DE CATEGORIA 
+    handleChangeInsertarCategoria = async (e) => {
+        e.persist();
+        await this.setState({
+            categoria: {
+                ...this.state.categoria,
+                [e.target.name]: e.target.value
+            }
+        });
+        console.log(this.state.categoria);
+    }
+
+    //INGRESO DE DATOS AL EDITPRODUCTO
     handleChangeProductoEditProducto = async e => {
         e.persist();
         await this.setState({
@@ -189,8 +214,6 @@ export default class Producto extends Component {
         console.log(this.state.editProducto);
     }
 
-
-
     //FUNCION DE ARRANQUE
     componentDidMount() {
         this.peticionGetProducto();
@@ -201,12 +224,14 @@ export default class Producto extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            img: baseUrl + "files/error.png",
+            profileImg: baseUrl + "files/error.png",
             data: [],
             files: null,
             modalInsertarProducto: false,
             modalEditarProducto: false,
+            modalInsertarCategoria: false,
             modalViewProducto: false,
-            datacategorias: [],
             producto: {
                 nombre: '',
                 descripcion: '',
@@ -222,6 +247,10 @@ export default class Producto extends Component {
                 estado: '',
                 inventario: null,
                 visible: ''
+            },
+            categoria: {
+                id: '',
+                nombre: ''
             },
             customers: null,
             selectedCustomers: null,
@@ -318,13 +347,25 @@ export default class Producto extends Component {
             </div>
         )
     }
+    //ARCHIVO
+    imageHandler = (e) => {
+        this.handleChangeFiles(e);
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (reader.readyState === 2) {
+                this.setState({ profileImg: reader.result })
+            }
+        }
+        reader.readAsDataURL(e.target.files[0])
+    };
 
     render() {
-        const { editProducto, data, datacategorias } = this.state;
+        const { editProducto, data, datacategorias, profileImg } = this.state;
         const header = this.renderHeaderProducto();
         const toggle = () => this.modalInsertarProducto();
         const toggle2 = () => this.modalEditarProducto();
         const toggle3 = () => this.modalViewProducto();
+        const toggle4 = () => this.modalInsertarCategoria();
         const chooseOptions = { icon: 'pi pi-fw pi-images', iconOnly: true, className: 'btn-primary' };
         const uploadOptions = { icon: 'pi pi-fw pi-cloud-upload', iconOnly: true, className: 'custom-upload-btn p-button-success p-button-rounded p-button-outlined' };
         const cancelOptions = { icon: 'pi pi-fw pi-times', iconOnly: true, className: 'btn-danger' };
@@ -333,7 +374,7 @@ export default class Producto extends Component {
             <div className="datatable-doc-demo">
                 <div className="flex justify-content-between align-items-center">
                     <h5 className="m-0 h5">Producto</h5>
-                    <button className='btn btn-primary' onClick={() => { this.setState({ producto: null, files: null }); this.modalInsertarProducto() }} ><FontAwesomeIcon icon={faPlus} style={{ "marginRight": "1rem" }} /><span className='menu-title'>Agregar</span></button>
+                    <button className='btn btn-primary' onClick={() => { this.setState({ producto: {}, files: null , profileImg: this.state.img }); this.modalInsertarProducto() }} ><FontAwesomeIcon icon={faPlus} style={{ "marginRight": "1rem" }} /><span className='menu-title'>Agregar</span></button>
                 </div>
                 <br />
                 <div className='card'>
@@ -353,10 +394,10 @@ export default class Producto extends Component {
                 </div>
 
                 {/* MODAL DE REGISTRAR */}
-                <Modal isOpen={this.state.modalInsertarProducto} toggle={toggle} >
-                    <ModalHeader toggle={toggle}>
+                <Modal isOpen={this.state.modalInsertarProducto} toggle={() => { toggle(); this.setState({ profileImg: this.state.img }) }} size="lg" >
+                    <ModalHeader>
                         <span>Agregar Producto</span>
-                        <button type="button" className="close" onClick={() => this.modalInsertarProducto()}>
+                        <button type="button" className="close" onClick={() => { this.setState({ profileImg: this.state.img }); this.modalInsertarProducto(); }}>
                             <FontAwesomeIcon icon={faClose} />
                         </button>
 
@@ -366,28 +407,28 @@ export default class Producto extends Component {
 
                         <FormGroup>
                             <Row>
-                                <Col md={12}>
+                                <Col md={6}>
+                                    <Label htmlFor='imagen'>Imagen:</Label>
+                                    <div className="custom-file">
+                                        <input className='custom-file-input' type="file" name="files" accept="image/*" onChange={this.imageHandler} />
+                                        <label data-browse="Seleccionar" className="custom-file-label" htmlFor="customFile">Seleccionar imagen...</label>
+                                    </div>
+                                    <img src={profileImg} alt="cargado" style={{ "width": "100%", "borderRadius": "0px 0px 10px 10px", "padding": "20px 20px 0px 20px" }} />
+                                </Col>
+                                <Col md={6}>
                                     <Label htmlFor='nombre'>Nombre:</Label>
-                                    <Input valid type='text' name='nombre' id='nombre' onChange={this.handleChangeProducto} />
+                                    <Input invalid type='text' name='nombre' id='nombre' onChange={this.handleChangeProducto} />
                                     <FormText>
                                         Nombre del producto.
                                     </FormText>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
-                                </Col>
-                                <Col md={12}>
                                     <Label htmlFor='descripcion'>Descripción:</Label>
-                                    <Input invalid type='text' name='descripcion' id='descripcion' onChange={this.handleChangeProducto} />
+                                    <Input type='textarea' name='descripcion' id='descripcion' onChange={this.handleChangeProducto} />
                                     <FormText>
                                         Descripción del producto.
                                     </FormText>
-                                    <FormFeedback>
-                                        Complete el campo
-                                    </FormFeedback>
-                                </Col>
-
-                                <Col md={12}>
                                     <Label htmlFor='categoria'>Categoria:</Label>
                                     <br />
                                     <Select options={datacategorias} isMulti name='categoria' onChange={this.handleChangeCategoria} placeholder="Seleccione la categoria" />
@@ -397,14 +438,10 @@ export default class Producto extends Component {
                                     <FormFeedback>
                                         Complete inventarioel campo
                                     </FormFeedback>
-                                </Col>
-                                <Col md={12}>
-                                    <br></br>
-                                    <Label htmlFor='imagen'>Imagen:</Label>
-                                    <input type="file" name="files" onChange={this.handleChangeFiles} />
-                                   
-
-                                   
+                                    <br />
+                                    <button className='btn btn-primary' onClick={() => { this.setState({ categoria: null }); this.modalInsertarCategoria() }}>
+                                        Agregar Categoría
+                                    </button>
                                 </Col>
                             </Row>
                         </FormGroup>
@@ -414,34 +451,67 @@ export default class Producto extends Component {
                         <button className='btn btn-primary' onClick={() => this.peticionPostProducto()}>
                             Insertar
                         </button>
-                        <button className='btn btn-danger' onClick={() => this.modalInsertarProducto()}>
+                        <button className='btn btn-danger' onClick={() => { this.setState({ profileImg: this.state.img }); this.modalInsertarProducto(); }}>
                             Cancelar
                         </button>
                     </ModalFooter>
                 </Modal>
+
                 {/* MODAL DE EDITAR */}
+                
                 <Modal isOpen={this.state.modalEditarProducto} toggle={toggle2} size='lg'>
                     <ModalHeader>
-                        <span >Editar producto</span>
+                    <span>Agregar Producto</span>
+                        <button type="button" className="close" onClick={() => { this.setState({ profileImg: this.state.img }); this.modalEditarProducto(); }}>
+                            <FontAwesomeIcon icon={faClose} />
+                        </button>
                     </ModalHeader>
-
                     <ModalBody>
-                        <div className="form-group"><br />
-                            <label htmlFor="nombre">Nombre</label>
-                            <input className="form-control" type="text" name='nombre' id='nombre' onChange={this.handleChangeProducto} value={editProducto.nombre || ''} />
-                            <div />
-                            <label htmlFor='descripcion'>Descripción</label>
-                            <input className='form-control' type='text' name='descripcion' id='descripcion' onChange={this.handleChangeEditProducto} value={editProducto.descripcion || ''} />
-                            <label htmlFor='imagen'>Imagen</label>
-                            <input className='form-control' name='imagen' id='imagen' onChange={this.handleChangeEditProducto} value={editProducto.imagen || ''} />
-                            <label htmlFor='categoria'>Categoria</label>
-                            <input className='form-control' name='categorian' id='categoria' onChange={this.handleChangeProducto} value={editProducto.categoria || ''} />
-                        </div>
+                        <FormGroup>
+                            <Row>
+                                <Col md={6}>
+                                    <Label htmlFor='imagen'>Imagen:</Label>
+                                    <div className="custom-file">
+                                        <input className='custom-file-input' type="file" name="files" accept="image/*" onChange={this.imageHandler} />
+                                        <label data-browse="Seleccionar" className="custom-file-label" htmlFor="customFile">Seleccionar imagen...</label>
+                                    </div>
+                                    <img src={profileImg} alt="cargado" style={{ "width": "100%", "borderRadius": "0px 0px 10px 10px", "padding": "20px 20px 0px 20px" }} />
+                                </Col>
+                                <Col md={6}>
+                                    <Label htmlFor='nombre'>Nombre:</Label>
+                                    <Input invalid type='text' name='nombre' id='nombre' onChange={this.handleChangeProductoEditProducto} value={editProducto.nombre || ''} />
+                                    <FormText>
+                                        Nombre del producto.
+                                    </FormText>
+                                    <FormFeedback>
+                                        Complete el campo
+                                    </FormFeedback>
+                                    <Label htmlFor='descripcion'>Descripción:</Label>
+                                    <Input type='textarea' name='descripcion' id='descripcion' onChange={this.handleChangeProductoEditProducto} value={editProducto.descripcion || ''}/>
+                                    <FormText>
+                                        Descripción del producto.
+                                    </FormText>
+                                    <Label htmlFor='categoria'>Categoria:</Label>
+                                    <br />
+                                    <Select options={datacategorias} isMulti name='categoria' onChange={this.handleChangeCategoria} placeholder="Seleccione la categoria" />
+                                    <FormText>
+                                        Categoria del producto.
+                                    </FormText>
+                                    <FormFeedback>
+                                        Complete inventarioel campo
+                                    </FormFeedback>
+                                    <br />
+                                    <button className='btn btn-primary' onClick={() => { this.setState({ categoria: null }); this.modalInsertarCategoria() }}>
+                                        Agregar Categoría
+                                    </button>
+                                </Col>
+                            </Row>
+                        </FormGroup>
                     </ModalBody>
 
                     <ModalFooter>
-                        <button className='btn btn-primary' onClick={() => this.peticionPostProducto()}>
-                            Insertar
+                        <button className='btn btn-primary' onClick={() => this.peticionPutProducto()}>
+                            Editar
                         </button>
 
                         <button className='btn btn-danger' onClick={() => this.modalEditarProducto()}>
@@ -463,10 +533,10 @@ export default class Producto extends Component {
                             <Row>
                                 <Col md={12} >
                                     <ListGroup flush>
-                                    <ListGroupItem style={{"display":"flex", "justifyContent": "center"}}>
+                                        <ListGroupItem style={{ "display": "flex", "justifyContent": "center" }}>
                                             {editProducto.imagen
-                                                ? <img src={baseUrl + "files/" + editProducto.imagen} style={{"width" : "70%", "borderRadius": "10%"}} alt={editProducto.id} />
-                                                : <img src={baseUrl + "files/error.png"} style={{"width" : "70%", "borderRadius": "10%"}} alt={editProducto.id} />
+                                                ? <img src={baseUrl + "files/" + editProducto.imagen} style={{ "width": "70%", "borderRadius": "10%" }} alt={editProducto.id} />
+                                                : <img src={baseUrl + "files/error.png"} style={{ "width": "70%", "borderRadius": "10%" }} alt={editProducto.id} />
                                             }
 
                                         </ListGroupItem>
@@ -512,8 +582,44 @@ export default class Producto extends Component {
                     </ModalBody>
 
                     <ModalFooter>
-                        <button className='btn btn-primary' onClick={() => { this.modalViewProducto(); this.setState({ datainsumos: [], insumo: false }) }}>
+                        <button className='btn btn-primary' onClick={() => { this.modalViewProducto(); }}>
                             Cerrar
+                        </button>
+                    </ModalFooter>
+                </Modal>
+
+                {/* MODAL DE CATEGORIA */}
+                <Modal isOpen={this.state.modalInsertarCategoria} toggle={toggle4} size="sm" >
+                    <ModalHeader>
+                        <span>Agregar Categoria</span>
+                        <button type="button" className="close" onClick={() => { this.modalInsertarCategoria(); }}>
+                            <FontAwesomeIcon icon={faClose} />
+                        </button>
+                    </ModalHeader>
+
+                    <ModalBody>
+                        <FormGroup>
+                            <Row>
+                                <Col md={12}>
+                                    <Label htmlFor='nombre'>Nombre:</Label>
+                                    <Input invalid type='text' name='nombre' id='nombre' onChange={this.handleChangeInsertarCategoria} />
+                                    <FormText>
+                                        Nombre del producto.
+                                    </FormText>
+                                    <FormFeedback>
+                                        Complete el campo
+                                    </FormFeedback>
+                                </Col>
+                            </Row>
+                        </FormGroup>
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <button className='btn btn-primary' onClick={() => this.peticionPostCategoria()}>
+                            Insertar
+                        </button>
+                        <button className='btn btn-danger' onClick={() => { this.modalInsertarCategoria(); }}>
+                            Cancelar
                         </button>
                     </ModalFooter>
                 </Modal>

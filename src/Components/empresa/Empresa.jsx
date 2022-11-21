@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import axios from "axios";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashAlt, faClose } from '@fortawesome/free-solid-svg-icons';
-import { autorizacion, baseUrl } from '../../Utils/Api';
+import { autorizacion, baseUrl, autorizacionFiles } from '../../Utils/Api';
 import { FilterMatchMode, FilterOperator } from 'primereact/api';
 import { faEye, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { DataTable } from 'primereact/datatable';
@@ -10,6 +10,8 @@ import { Column } from 'primereact/column';
 import { Alert, Badge, Button, Collapse, ListGroup, ListGroupItem } from 'reactstrap';
 import { Col, FormFeedback, FormGroup, FormText, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 import { InputText } from 'primereact/inputtext';
+import { MultiSelect } from 'primereact/multiselect';
+import Select from 'react-select'
 import swal from 'sweetalert';
 
 import 'primeicons/primeicons.css';
@@ -23,7 +25,7 @@ const url = baseUrl + "empresa/";
 export default class Empresa extends Component {
 
     //DATOS
-    state= {}
+    state = {}
     //PETICIÓN GET
     peticionGetEmpresa = () => {
         axios.get(url, autorizacion).then(response => {
@@ -31,30 +33,58 @@ export default class Empresa extends Component {
             this.setState({ data: response.data, loading: false });
         }).catch(error => {
             this.setState({ loading: false });
-            swal({title: "ERROR AL CONSULTAR", text: " ",icon: "error",buttons:false, timer:1500})
+            swal({ title: "ERROR AL CONSULTAR", text: " ", icon: "error", buttons: false, timer: 1500 })
             console.log(error.message);
         })
     }
     //PETICIÓN GET ESPECIALIDAD
-    peticionGetEspecialidad = (id) => {    
-        axios.get(url + 'especialidad/'+ id, autorizacion).then(response => {
-            this.setState({ dataespecialidad: response.data });
+    peticionGetEspecialidad = () => {
+        axios.get(url + 'especialidad/' + autorizacion).then(response => {
+            const datos = [];
+            response.data.map((especialidad) => {
+                const dato = { value: especialidad.id, label: especialidad.nombre }
+                datos.push(dato);
+            })
+            this.setState({ dataespecialidad: datos });
         }).catch(error => {
             console.log(error.message);
-            swal({title: "ERROR AL CONSULTAR ESPECIALIDAD", text: " ",icon: "error",buttons:false, timer:1500})
+            swal({ title: "ERROR AL CONSULTAR ESPECIALIDAD", text: " ", icon: "error", buttons: false, timer: 1500 })
         })
     }
     //PETICIÓN POST
     peticionPostEmpresa = async () => {
+        var img = null;
+
+        if (this.state.files != null) {
+            var bodyFormData = new FormData();
+            bodyFormData.append('files', this.state.files);
+            await axios.post(baseUrl + "files/upload", bodyFormData, autorizacionFiles).then(response => {
+                img = response.data.message;
+            }).catch(error => {
+                console.log(error.message);
+            })
+        }
+        this.state.empresa.imagen = img;
 
         await axios.post(url, this.state.empresa, autorizacion).then(response => {
             this.modalInsertarEmpresa();
             this.peticionGetEmpresa();
-            
+
 
         }).catch(error => {
             console.log(error.message);
-            swal({title: "ERROR AL REGISTRAR", text: " ",icon: "error",buttons:false, timer:1500})
+            swal({ title: "ERROR AL REGISTRAR", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+    }
+    //PETICION POST ESPECIALIDAD
+    peticionPostEspecialidad = async () => {
+
+        await axios.post(url + "especialidad", this.state.especialidad, autorizacion).then(response => {
+            this.modalInsertarEspecialidad();
+            this.peticionGetEspecialidad();
+
+        }).catch(error => {
+            console.log(error.message);
         })
 
     }
@@ -63,11 +93,7 @@ export default class Empresa extends Component {
         axios.put(url + this.state.editEmpresa.id, this.state.editEmpresa, autorizacion).then(response => {
             this.modalEditarEmpresa();
             this.peticionGetEmpresa();
-            swal({title: "Empresa "+response.data.nombre+" editado", text: " ",icon: "success",buttons:false, timer:1500})
-        })
-        .catch(error => {
-            console.log(error.message);
-            swal({title: "ERROR AL EDITAR", text: " ",icon: "error",buttons:false, timer:1500})
+            swal({ title: "Empresa " + response.data.nombre + " editado", text: " ", icon: "success", buttons: false, timer: 1500 })
         })
     }
 
@@ -75,20 +101,24 @@ export default class Empresa extends Component {
     peticionEstadoEmpresa = (empresa) => {
         axios.put(url + 'estado/' + empresa.id, this.state.editEmpresa, autorizacion).then(response => {
             this.peticionGetEmpresa();
-            swal({title: "Empresa "+response.data.nombre+" eliminado", text: " ",icon: "success",buttons:false, timer:1500})
+            swal({ title: "Empresa " + response.data.nombre + " eliminado", text: " ", icon: "success", buttons: false, timer: 1500 })
         }).catch(error => {
             console.log(error.message);
-            swal({title: "ERROR AL ELIMINAR", text: " ",icon: "error",buttons:false, timer:1500})
+            swal({ title: "ERROR AL ELIMINAR", text: " ", icon: "error", buttons: false, timer: 1500 })
         })
     }
 
-     //MODAL DE INSERTAR
+    //MODAL DE INSERTAR
     modalInsertarEmpresa = () => {
         this.setState({ modalInsertarEmpresa: !this.state.modalInsertarEmpresa });
     }
     //MODAL DE EDITAR
     modalEditarEmpresa = () => {
         this.setState({ modalEditarEmpresa: !this.state.modalEditarEmpresa });
+    }
+    //MODAL DE INSERTAR ESPECIALIDAD
+    modalInsertarEspecialidad = () => {
+        this.setState({ modalInsertarEspecialidad: !this.state.modalInsertarEspecialidad });
     }
     //MODAL DE VIEW
     modalViewEmpresa = () => {
@@ -98,6 +128,7 @@ export default class Empresa extends Component {
     seleccionarEmpresa = (empresa) => {
         this.setState({
             editEmpresa: {
+                id: empresa.id,
                 nombre: empresa.nombre,
                 contacto: empresa.contacto,
                 telefono: empresa.telefono,
@@ -108,7 +139,49 @@ export default class Empresa extends Component {
             }
         })
     }
-        //INGRESO DE DATOS AL empresa
+    //PASAR ESPECIALIDAD
+    pasarEspecialidad = (especialidad) => {
+        this.setState({
+            datosespecialidad: {
+                nombre: especialidad.nombre,
+                descripcion: especialidad.descripcion
+            }
+        })
+    }
+
+    //INGRESO DE FILES
+    handleChangeFiles = (e) => {
+        this.setState({
+            files: e.target.files[0],
+        })
+    }
+    //INGRESO DE DATOS DE ESPECIALIDAD A LA EMPRESA
+    handleChangeEspecialidad = async (e) => {
+
+        const lista = []
+        e.map((e) => { lista.push(e.value) });
+
+        await this.setState({
+            empresa: {
+                ...this.state.empresa,
+                especialidad: lista
+            }
+        });
+
+        console.log(this.state.empresa);
+    }
+    //INGRESO DE DATOS DE ESPECIALIDAD 
+    handleChangeInsertarEspecialidad = async (e) => {
+        e.persist();
+        await this.setState({
+            especialidad: {
+                ...this.state.especialidad,
+                [e.target.name]: e.target.value
+            }
+        });
+        console.log(this.state.especialidad);
+    }
+    //INGRESO DE DATOS AL empresa
 
     handleChangeEmpresa = async e => {
         e.persist();
@@ -139,63 +212,76 @@ export default class Empresa extends Component {
     constructor(props) {
         super(props);
         this.state = {
-        data: [],
-        modalInsertarEmpresa: false,
-        modalEditarEmpresa: false,
-        modalViewEmpresa: false,
-        dataespecialidad: [],
-        datosespecialidad:{
-            nombre:'',
-            descripcion:''
-        },
-        empresa: {
-            nombre: '',
-            contacto: '',
-            telefono: 0,
-            direccion: '',
-            email: '',
-            imagen: '',
-            especialidad: 0
-        },
-        editEmpresa: {
-            id:'',
-            nombre: '',
-            contacto: '',
-            telefono: 0,
-            direccion: '',
-            email: '',
-            imagen: '',
-            especialidad: 0, 
-            estado:''
-        }, 
-        customers: null,
+            img: baseUrl + "files/error.png",
+            profileImg: baseUrl + "files/error.png",
+            data: [],
+            files: null,
+            modalInsertarEmpresa: false,
+            modalEditarEmpresa: false,
+            modalInsertarEspecialidad: false,
+            modalViewEmpresa: false,
+            empresa: {
+                nombre: '',
+                contacto: '',
+                telefono: 0,
+                direccion: '',
+                email: '',
+                imagen: null,
+                especialidad: 0
+            },
+            editEmpresa: {
+                id: '',
+                nombre: '',
+                contacto: '',
+                telefono: 0,
+                direccion: '',
+                email: '',
+                imagen: null,
+                especialidad: 0,
+                estado: ''
+            },
+            especialidad: {
+                id: '',
+                nombre: ''
+            },
+
+            customers: null,
             selectedCustomers: null,
             filters: {
-                    'global': { value: null, matchMode: FilterMatchMode.CONTAINS }
+                'global': { value: null, matchMode: FilterMatchMode.CONTAINS }
             },
             globalFilterValue: '',
             loading: true
+        }
+        this.Botones = this.Botones.bind(this);
+        this.onGlobalFilterChangeEmpresa = this.onGlobalFilterChangeEmpresa.bind(this);
+        this.headerTemplate = this.headerTemplate.bind(this);
+        this.itemTemplate = this.itemTemplate.bind(this);
     }
-    this.Botones = this.Botones.bind(this);
-        this.onGlobalFilterChange = this.onGlobalFilterChange.bind(this);
+    //RENDERIZAR IMAGEN
+    Imagen(EmpresaeditEmpresa) {
+        return <div >
+            {EmpresaeditEmpresa.imagen
+                ? <img src={baseUrl + "files/" + EmpresaeditEmpresa.imagen} style={{ "width": "45px", "borderRadius": "10%" }} alt={EmpresaeditEmpresa.id} />
+                : <img src={baseUrl + "files/error.png"} style={{ "width": "45px", "borderRadius": "10%" }} alt={EmpresaeditEmpresa.id} />
+            }
+        </div>;
     }
-
     //RENDERIZAR BOTONES
     Botones(empresa) {
         return <div className="btn-group btn-group-sm" role="group">
-                        <button value={empresa.id} className='btn btn-primary' onClick={() => { swal({title: "¿Desea editar al Empresa "+Empresa.nombre+"?",icon: "warning",buttons: ["Cancelar", "Editar"],dangerMode:true,}).then((respuesta) => {if(respuesta){this.seleccionarEmpresa(empresa); this.modalEditarEmpresa()}});  }}><FontAwesomeIcon icon={faEdit} /></button>
-                        <button className='btn btn-info' onClick={() => {  this.seleccionarEmpresa(empresa); this.modalViewEmpresa() }} ><FontAwesomeIcon icon={faEye} /></button>
-                        <button className='btn btn-danger' onClick={() => {swal({title: "¿Desea eliminar al empresa "+empresa.nombre+"?",icon: "warning",buttons: ["Cancelar", "Eliminar"],dangerMode:true,}).then((respuesta) => {if(respuesta){this.peticionEstadoEmpresa(empresa)}});}}><FontAwesomeIcon icon={faTrashAlt} /></button>
-
+            <button value={empresa.id} className='btn btn-primary' onClick={() => { swal({ title: "¿Desea editar al Empresa " + empresa.nombre + "?", icon: "warning", buttons: ["Cancelar", "Editar"], dangerMode: true, }).then((respuesta) => { if (respuesta) { this.seleccionarEmpresa(empresa); this.modalEditarEmpresa() } }); }}><FontAwesomeIcon icon={faEdit} /></button>
+            <button className='btn btn-info' onClick={() => { this.seleccionarEmpresa(empresa); this.modalViewEmpresa() }} ><FontAwesomeIcon icon={faEye} /></button>
+            <button className='btn btn-danger' onClick={() => { swal({ title: "¿Desea eliminar al empresa " + empresa.nombre + "?", icon: "warning", buttons: ["Cancelar", "Eliminar"], dangerMode: true, }).then((respuesta) => { if (respuesta) { this.peticionEstadoEmpresa(empresa) } }); }}><FontAwesomeIcon icon={faTrashAlt} /></button>
         </div>;
     }
-        //FILTRADO GLOBAL
-    onGlobalFilterChange(e) {
+    //FILTRADO GLOBAL
+    onGlobalFilterChangeEmpresa(e) {
         const value = e.target.value;
         let filters = { ...this.state.filters };
         filters['global'].value = value;
         console.log(value)
-        this.setState({filters, globalFilterValue: value });
+        this.setState({ filters, globalFilterValue: value });
     }
 
     //RENDERIZAR ENCABEZADO DE LA DATATABLE
@@ -205,24 +291,56 @@ export default class Empresa extends Component {
                 <h5 className="m-0 h5"></h5>
                 <span className="p-input-icon-left">
                     <i className="pi pi-search" />
-                    <InputText value={this.state.globalFilterValue} onChange={this.onGlobalFilterChange} placeholder="Buscar" />
+                    <InputText value={this.state.globalFilterValue} onChange={this.onGlobalFilterChangeEmpresa} placeholder="Buscar" />
                 </span>
             </div>
         )
     }
+    //EVENTOS DE SUBIR ARCHIVO
+    headerTemplate(options) {
+        const { className, chooseButton, cancelButton, uploadButton } = options;
 
+        return (
+            <div className={className} style={{ backgroundColor: 'transparent', display: 'flex', alignItems: 'center' }}>
+                {chooseButton}
+                {uploadButton}
+                {cancelButton}
+            </div>
+        );
+    }
+    itemTemplate(file, props) {
+        return (
+            <div style={{ width: '100%' }}>
+                <img alt={file.name} src={file.objectURL} width={"100%"} />
+            </div>
+        )
+    }
+    //ARCHIVO
+    imageHandler = (e) => {
+        this.handleChangeFiles(e);
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (reader.readyState === 2) {
+                this.setState({ profileImg: reader.result })
+            }
+        }
+        reader.readAsDataURL(e.target.files[0])
+    };
     render() {
-        const { editEmpresa, data,  dataespecialidad } = this.state;
+        const { editEmpresa, data, dataespecialidad, profileImg } = this.state;
         const header = this.renderHeader();
         const toggle = () => this.modalInsertarEmpresa();
         const toggle2 = () => this.modalEditarEmpresa();
         const toggle3 = () => this.modalViewEmpresa();
-        const especialidad = () => this.setState({ especialidad: !this.state.especialidad });
+        const toggle4 = () => this.modalInsertarEspecialidad();
+        const chooseOptions = { icon: 'pi pi-fw pi-images', iconOnly: true, className: 'btn-primary' };
+        const uploadOptions = { icon: 'pi pi-fw pi-cloud-upload', iconOnly: true, className: 'custom-upload-btn p-button-success p-button-rounded p-button-outlined' };
+        const cancelOptions = { icon: 'pi pi-fw pi-times', iconOnly: true, className: 'btn-danger' };
         return (
             <div className="datatable-doc-demo">
                 <div className="flex justify-content-between align-items-center">
                     <h5 className="m-0 h5">empresa</h5>
-                    <button className='btn btn-primary'onClick={() => { this.setState({ empresa: null, tipoModal: 'insertar' }); this.modalInsertarEmpresa() }}><FontAwesomeIcon icon={faPlus} style={{ "marginRight": "1rem" }} /><span className='menu-title'>Agregar</span></button>
+                    <button className='btn btn-primary' onClick={() => { this.setState({ empresa: null, tipoModal: 'insertar' }); this.modalInsertarEmpresa() }}><FontAwesomeIcon icon={faPlus} style={{ "marginRight": "1rem" }} /><span className='menu-title'>Agregar</span></button>
                 </div>
                 <br />
                 <div className='card'>
@@ -232,100 +350,83 @@ export default class Empresa extends Component {
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         breakpoint="800px" paginator rows={10} rowsPerPageOptions={[10, 25, 50]} emptyMessage="Preveedores no encontrados..."
                         currentPageReportTemplate="Registro {first} - {last} de {totalRecords} empresaes">
+                        <Column header="Imagen" body={this.Imagen} />
                         <Column field="nombre" header="Nombre" />
                         <Column field="contacto" header="Contacto" />
-                        <Column field="telefono" header="Telefono" />
-                        <Column field="direccion" header="Direccion" />
-                        <Column field="email" header="Email" />
-                        <Column field="imagen" header="Imagen" />
                         <Column field="especialidad" header="Especialidad" />
                         <Column field="estado" header="Botones" body={this.Botones} />
                     </DataTable>
-                    </div>
+                </div>
                 {/*  MODAL INSERTAR */}
-                <Modal isOpen={this.state.modalInsertarEmpresa} toggle={toggle} size='lg'>
-                <ModalHeader toggle={toggle}>
+                <Modal isOpen={this.state.modalInsertarEmpresa} toggle={() => { toggle(); this.setState({ profileImg: this.state.img }) }} size='lg'>
+                    <ModalHeader toggle={toggle}>
                         <span>Agregar Empresa</span>
-                        <button type="button" className="close" onClick={() => this.modalInsertarEmpresa()}>
+                        <button type="button" className="close" onClick={() => { this.setState({ profileImg: this.state.img }); this.modalInsertarEmpresa(); }} >
                             <FontAwesomeIcon icon={faClose} />
                         </button>
 
                     </ModalHeader>
-
                     <ModalBody>
-                    <FormGroup>
-                                <Row>
-                                <Col md={6}>
-                                    <Label htmlFor='nombre'>Nombre:</Label>
-                                    <Input valid type='text' name='nombre' id='nombre' onChange={this.handleChangeEmpresa} />
-                                    <FormFeedback>
-                                        Complete el campo
-                                    </FormFeedback>
-                                </Col>
-                                <Col md={6}>
-                                    <Label htmlFor='contacto'>Contacto:</Label>
-                                    <Input invalid type='text' name='contacto' id='contacto' onChange={this.handleChangeEmpresa} />
-                                    <FormFeedback>
-                                        Complete el campo
-                                    </FormFeedback>
-                                </Col>
-                                </Row>
-                            </FormGroup>
-
-                            <FormGroup>
-                                <Row>
-                                <Col md={6}>
-                                    <Label htmlFor='telefono'>Telefono:</Label>
-                                    <Input invalid type='text' name='telefono' id='telefono' onChange={this.handleChangeEmpresa} />
-                                    
-                                    <FormFeedback>
-                                        Complete el campo
-                                    </FormFeedback>
-                                </Col>
-                                <Col md={6}>
-                                    <Label htmlFor='direccion'>Dirección:</Label>
-                                    <Input invalid type='text' name='direccion' id='direccion' onChange={this.handleChangeEmpresa} />
-                                    <FormFeedback>
-                                        Complete el campo
-                                    </FormFeedback>
-                                </Col>
-                                </Row>
-                            </FormGroup>
-                            <FormGroup>
-                                <Row>
-                                <Col md={6}>
-                                    <Label htmlFor='email'>Email:</Label>
-                                    <Input invalid type='text' name='email' id='email' onChange={this.handleChangeEmpresa} />
-                                    
-                                    <FormFeedback>
-                                        Complete el campo
-                                    </FormFeedback>
-                                </Col>
+                        <FormGroup>
+                            <Row>
                                 <Col md={6}>
                                     <Label htmlFor='imagen'>Imagen:</Label>
-                                    <Input invalid type='text' name='imagen' id='imagen' onChange={this.handleChangeEmpresa} />
+                                    <div className="custom-file">
+                                        <input className='custom-file-input' type="file" name="files" accept="image/*" onChange={this.imageHandler} />
+                                        <label data-browse="Seleccionar" className="custom-file-label" htmlFor="customFile">Seleccionar imagen...</label>
+                                    </div>
+                                    <img src={profileImg} alt="cargado" style={{ "width": "100%", "borderRadius": "0px 0px 10px 10px", "padding": "20px 20px 0px 20px" }} />
+                                    <Label htmlFor='especialidad'>especialidad:</Label>
+                                    <br />
+                                    <Select options={dataespecialidad} isMulti name='especialidad' onChange={this.handleChangeEspecialidad} placeholder="Seleccione la especialidad" />
+                                    <FormText>
+                                        especialidad del empresa.
+                                    </FormText>
+                                    <FormFeedback>
+                                        Complete inventarioel campo
+                                    </FormFeedback>
+                                    <br />
+                                    <button className='btn btn-primary' onClick={() => { this.setState({ especialidad: null }); this.modalInsertarEspecialidad() }}>
+                                        Agregar Especialidad
+                                    </button>
+                                </Col>
+                                <Col md={6}>
+                                    <Label htmlFor='nombre'>Nombre:</Label>
+                                    <Input invalid type='text' name='nombre' id='nombre' onChange={this.handleChangeEmpresa} />
+                                    <FormText>
+                                        Nombre del empresa.
+                                    </FormText>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
+                                    <Label htmlFor='descripcion'>Contato:</Label>
+                                    <Input invalid type='text' name='descripcion' id='descripcion' onChange={this.handleChangeEmpresa} />
+                                    <FormText>
+                                        Descripción del empresa.
+                                    </FormText>
+                                    <Label htmlFor='descripcion'>Telefono:</Label>
+                                    <Input invalid type='number' name='descripcion' id='descripcion' onChange={this.handleChangeEmpresa} />
+                                    <FormText>
+                                        Descripción del empresa.
+                                    </FormText>
+                                    <Label htmlFor='descripcion'>Direccion:</Label>
+                                    <Input invalid type='text' name='descripcion' id='descripcion' onChange={this.handleChangeEmpresa} />
+                                    <FormText>
+                                        Descripción del empresa.
+                                    </FormText>
+                                    <Label htmlFor='descripcion'>Email:</Label>
+                                    <Input invalid type='email' name='descripcion' id='descripcion' onChange={this.handleChangeEmpresa} />
+                                    <FormText>
+                                        Descripción del empresa.
+                                    </FormText>
                                 </Col>
-                                </Row>
-                            </FormGroup>
-                            <FormGroup>
-                                <Row>
-                                <Col md={12}>
-                                    <Label htmlFor='especialidad'>Especialidad:</Label>
-                                    <Input invalid type='text' name='especialidad' id='especialidad' onChange={this.handleChangeEmpresa} />
-                                    <FormFeedback>
-                                        Complete el campo
-                                    </FormFeedback>
-                                </Col>
-                                </Row>
-                            </FormGroup>
+                            </Row>
+                        </FormGroup>
                     </ModalBody>
                     <ModalFooter>
-                            <button className='btn btn-primary' onClick={() => this.peticionPostEmpresa()}>
-                                Insertar
-                            </button>
+                        <button className='btn btn-primary' onClick={() => this.peticionPostEmpresa()}>
+                            Insertar
+                        </button>
                         <button className='btn btn-danger' onClick={() => this.modalInsertarEmpresa()}>
                             Cancelar
                         </button>
@@ -335,85 +436,76 @@ export default class Empresa extends Component {
 
                 {/*  MODAL Editar*/}
                 <Modal isOpen={this.state.modalEditarEmpresa} toggle={toggle2} size='lg'>
-                <ModalHeader>
+                    <ModalHeader>
                         <span>Editar Empresa</span>
-                        <button type="button" className="close" onClick={() => this.modalEditarEmpresa()}>
+                        <button type="button" className="close" onClick={() =>{ this.setState({ profileImg: this.state.img }); this.modalEditarEmpresa(); }}>
                             <FontAwesomeIcon icon={faClose} />
                         </button>
 
                     </ModalHeader>
                     <ModalBody>
-                    <FormGroup>
-                                <Row>
-                                <Col md={6}>
-                                    <Label htmlFor='nombre'>Nombre:</Label>
-                                    <Input valid type='text' name='nombre' id='nombre' onChange={this.handleChangeEditEmpresa} value={editEmpresa.nombre || ''}/>
-                                    <FormFeedback>
-                                        Complete el campo
-                                    </FormFeedback>
-                                </Col>
-                                <Col md={6}>
-                                    <Label htmlFor='contacto'>Contacto:</Label>
-                                    <Input invalid type='text' name='contacto' id='contacto' onChange={this.handleChangeEditEmpresa} value={editEmpresa.contacto || ''}/>
-                                    <FormFeedback>
-                                        Complete el campo
-                                    </FormFeedback>
-                                </Col>
-                                </Row>
-                            </FormGroup>
-
-                            <FormGroup>
-                                <Row>
-                                <Col md={6}>
-                                    <Label htmlFor='telefono'>Telefono:</Label>
-                                    <Input invalid type='text' name='telefono' id='telefono' onChange={this.handleChangeEditEmpresa} value={editEmpresa.telefono || ''} />
-                                    
-                                    <FormFeedback>
-                                        Complete el campo
-                                    </FormFeedback>
-                                </Col>
-                                <Col md={6}>
-                                    <Label htmlFor='direccion'>Dirección:</Label>
-                                    <Input invalid type='text' name='direccion' id='direccion' onChange={this.handleChangeEditEmpresa} value={editEmpresa.direccion || ''}/>
-                                    <FormFeedback>
-                                        Complete el campo
-                                    </FormFeedback>
-                                </Col>
-                                </Row>
-                            </FormGroup>
-                            <FormGroup>
-                                <Row>
-                                <Col md={6}>
-                                    <Label htmlFor='email'>Email:</Label>
-                                    <Input invalid type='text' name='email' id='email' onChange={this.handleChangeEditEmpresa} value={editEmpresa.email || ''}/>
-                                    
-                                    <FormFeedback>
-                                        Complete el campo
-                                    </FormFeedback>
-                                </Col>
+                        <FormGroup>
+                            <Row>
                                 <Col md={6}>
                                     <Label htmlFor='imagen'>Imagen:</Label>
-                                    <Input invalid type='text' name='imagen' id='imagen' onChange={this.handleChangeEditEmpresa} value={editEmpresa.imagen || ''}/>
+                                    <div className="custom-file">
+                                        <input className='custom-file-input' type="file" name="files" accept="image/*" onChange={this.imageHandler} />
+                                        <label data-browse="Seleccionar" className="custom-file-label" htmlFor="customFile">Seleccionar imagen...</label>
+                                    </div>
+                                    <img src={profileImg} alt="cargado" style={{ "width": "100%", "borderRadius": "0px 0px 10px 10px", "padding": "20px 20px 0px 20px" }} />
+                                </Col>
+                                <Col md={6}>
+                                    <Label htmlFor='nombre'>Nombre:</Label>
+                                    <Input invalid type='text' name='nombre' id='nombre' onChange={this.handleChangeEditEmpresa} value={editEmpresa.nombre || ''} />
+                                    <FormText>
+                                        Nombre del empresa.
+                                    </FormText>
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
+                                    <Label htmlFor='descripcion'>Contato:</Label>
+                                    <Input type='textarea' name='descripcion' id='descripcion' onChange={this.handleChangeEditEmpresa} value={editEmpresa.contacto || ''} />
+                                    <FormText>
+                                        Descripción del empresa.
+                                    </FormText>
+                                    <Label htmlFor='telefono'>Telefono:</Label>
+                                    <Input type='textarea' name='telefono' id='telefono' onChange={this.handleChangeEditEmpresa} value={editEmpresa.telefono || ''} />
+                                    <FormText>
+                                        Descripción del empresa.
+                                    </FormText>
+                                    <Label htmlFor='direccion'>Direccion:</Label>
+                                    <Input type='textarea' name='direccion' id='direccion' onChange={this.handleChangeEditEmpresa} value={editEmpresa.direccion || ''} />
+                                    <FormText>
+                                        Descripción del empresa.
+                                    </FormText>
+                                    <Label htmlFor='email'>Email:</Label>
+                                    <Input type='textarea' name='email' id='email' onChange={this.handleChangeEditEmpresa} value={editEmpresa.email || ''} />
+                                    <FormText>
+                                        Descripción del empresa.
+                                    </FormText>
                                 </Col>
-                                </Row>
-                            </FormGroup>
-                            <FormGroup>
-                                <Row>
-                                <Col md={12}>
-                                    <Label htmlFor='especialidad'>Especialidad:</Label>
-                                    <Input invalid type='text' name='especialidad' id='especialidad' onChange={this.handleChangeEmpresa} value={editEmpresa.especialidad || ''} />
+                            </Row>
+                            <Row>
+                                <Col md={6}>
+                                <Label htmlFor='especialidad'>especialidad:</Label>
+                                    <br />
+                                    <Select options={dataespecialidad} isMulti name='especialidad' onChange={this.handleChangeEspecialidad} placeholder="Seleccione la especialidad" />
+                                    <FormText>
+                                        especialidad del empresa.
+                                    </FormText>
                                     <FormFeedback>
-                                        Complete el campo
+                                        Complete inventarioel campo
                                     </FormFeedback>
+                                    <br />
+                                    <button className='btn btn-primary' onClick={() => { this.setState({ especialidad: null }); this.modalInsertarespecialidad() }}>
+                                        Agregar Categoría
+                                    </button>
                                 </Col>
-                                </Row>
-                            </FormGroup>
+                            </Row>
+                        </FormGroup>
                     </ModalBody>
                     <ModalFooter>
-                    <button className='btn btn-primary' onClick={() => this.peticionPutEmpresa()}>
+                        <button className='btn btn-primary' onClick={() => this.peticionPutEmpresa()}>
                             Actualizar
                         </button>
                         <button className='btn btn-danger' onClick={() => this.modalEditarEmpresa()}>
@@ -422,7 +514,7 @@ export default class Empresa extends Component {
                     </ModalFooter>
                 </Modal>
                 {/* MODAL DE VISTA EMPRESA */}
-                <Modal isOpen={this.state.modalViewEmpresa} toggle={() => { toggle3(); this.setState({ dataespecialidad: [], especialidad: false }) }}>
+                <Modal isOpen={this.state.modalViewEmpresa} toggle={ toggle3}>
                     <ModalHeader >
                         <div><br /><h3>Empresa {editEmpresa.nombre}</h3></div>
                         <button type="button" className="close" onClick={() => this.modalViewEmpresa()}>
@@ -434,6 +526,12 @@ export default class Empresa extends Component {
                             <Row>
                                 <Col md={12} >
                                     <ListGroup flush>
+                                        <ListGroupItem style={{ "display": "flex", "justifyContent": "center" }}>
+                                            {editEmpresa.imagen
+                                                ? <img src={baseUrl + "files/" + editEmpresa.imagen} style={{ "width": "70%", "borderRadius": "10%" }} alt={editEmpresa.id} />
+                                                : <img src={baseUrl + "files/error.png"} style={{ "width": "70%", "borderRadius": "10%" }} alt={editEmpresa.id} />
+                                            }
+                                        </ListGroupItem>
                                         <ListGroupItem>
                                             <p>Nombre:</p> <h5>{editEmpresa.nombre}</h5>
                                         </ListGroupItem>
@@ -450,21 +548,9 @@ export default class Empresa extends Component {
                                             <p>Email:</p> <h5>{editEmpresa.email}</h5>
                                         </ListGroupItem>
                                         <ListGroupItem>
-                                            <p>Imagen:</p> <h5>{editEmpresa.imagen}</h5>
-                                        </ListGroupItem>
-                                        <ListGroupItem>
                                             <p>Especialidad:</p> <h5>{editEmpresa.especialidad}</h5>
+                                            
                                         </ListGroupItem>
-
-                                        <ListGroupItem>
-                                            <div>
-                                                <Button color="primary" onClick={() => { this.peticionGetEspecialidad(editEmpresa.id); especialidad() }} >
-                                                    especialidads de {editEmpresa.nombre}
-                                                </Button>
-
-                                            </div>
-                                        </ListGroupItem>
-                                        
                                     </ListGroup>
                                 </Col>
 
@@ -473,11 +559,47 @@ export default class Empresa extends Component {
                     </ModalBody>
 
                     <ModalFooter>
-                        <button className='btn btn-primary' onClick={() => { this.modalViewEmpresa(); this.setState({ dataespecialidad: [], especialidad: false  }) }}>
+                        <button className='btn btn-primary' onClick={() => { this.modalViewProducto(); }}>
                             Cerrar
                         </button>
                     </ModalFooter>
                 </Modal>
+                {/* MODAL DE Especialidad */}
+                <Modal isOpen={this.state.modalInsertarEspecialidad} toggle={toggle4} size="sm" >
+                    <ModalHeader>
+                        <span>Agregar Especialidad</span>
+                        <button type="button" className="close" onClick={() => { this.modalInsertarEspecialidad(); }}>
+                            <FontAwesomeIcon icon={faClose} />
+                        </button>
+                    </ModalHeader>
+
+                    <ModalBody>
+                        <FormGroup>
+                            <Row>
+                                <Col md={12}>
+                                    <Label htmlFor='nombre'>Nombre:</Label>
+                                    <Input invalid type='text' name='nombre' id='nombre' onChange={this.handleChangeInsertarEspecialidad} />
+                                    <FormText>
+                                        Nombre del producto.
+                                    </FormText>
+                                    <FormFeedback>
+                                        Complete el campo
+                                    </FormFeedback>
+                                </Col>
+                            </Row>
+                        </FormGroup>
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <button className='btn btn-primary' onClick={() => this.peticionPostEspecialidad()}>
+                            Insertar
+                        </button>
+                        <button className='btn btn-danger' onClick={() => { this.modalInsertarEspecialidad(); }}>
+                            Cancelar
+                        </button>
+                    </ModalFooter>
+                </Modal>
+
             </div>
         );
     }
