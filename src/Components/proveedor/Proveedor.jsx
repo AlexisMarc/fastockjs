@@ -2,12 +2,13 @@ import React, { Component } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { InputText } from 'primereact/inputtext';
-import { FilterMatchMode} from 'primereact/api';
+import { FilterMatchMode } from 'primereact/api';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClose, faEdit, faEye, faPlus, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
-import { Alert, Badge, Button, Col, Collapse, FormFeedback, FormGroup, FormText, Input, Label, ListGroup, ListGroupItem, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
+import { Alert, Badge, Button, Col, Collapse, FormFeedback, FormGroup, Input, Label, ListGroup, ListGroupItem, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 import { autorizacion, baseUrl } from '../../Utils/Api';
+import Validacion from '../../Utils/Validacion';
 import swal from 'sweetalert';
 
 
@@ -21,139 +22,10 @@ const url = baseUrl + 'proveedor/';
 
 export default class Proveedor extends Component {
 
+    validacion = new Validacion();
     //DATOS
     state = {}
 
-    //PETICIÓN GET
-    peticionGetProveedor = () => {
-        axios.get(url, autorizacion).then(response => {
-            this.setState({ data: response.data, loading: false });
-        }).catch(error => {
-            console.log(error.message);
-            this.setState({ loading: false });
-            swal({title: "ERROR AL CONSULTAR", text: " ",icon: "error",buttons:false, timer:1500})
-        })
-    }
-
-    //PETICIÓN GET INSUMOS
-    peticionGetInsumo = (id) => {
-        axios.get(url + 'insumo/' + id, autorizacion).then(response => {
-            this.setState({ datainsumos: response.data });
-        }).catch(error => {
-            console.log(error.message);
-            swal({title: "ERROR AL CONSULTAR INSUMOS", text: " ",icon: "error",buttons:false, timer:1500})
-        })
-    }
-
-
-
-    //PETICIÓN POST
-    peticionPostProveedor = async () => {
-
-        await axios.post(url, this.state.form, autorizacion).then(response => {
-            this.modalInsertarProveedor();
-            this.peticionGetProveedor();
-
-        }).catch(error => {
-            console.log(error.message);
-            swal({title: "ERROR AL REGISTRAR", text: " ",icon: "error",buttons:false, timer:1500})
-        })
-
-    }
-
-    //PETICIÓN PUT
-    peticionPutProveedor = () => {
-        axios.put(url + this.state.editForm.id, this.state.editForm, autorizacion).then(response => {
-            this.modalEditarProveedor();
-            this.peticionGetProveedor();
-            swal({title: "Proveedor "+response.data.nombre+" editado", text: " ",icon: "success",buttons:false, timer:1500})
-        }).catch(error => {
-            console.log(error.message);
-            swal({title: "ERROR AL EDITAR", text: " ",icon: "error",buttons:false, timer:1500})
-        })
-    }
-
-    //PETICIÓN ESTADO
-    peticionEstadoProveedor = (proveedor) => {
-        axios.put(url + 'estado/' + proveedor.id, this.state.editForm, autorizacion).then(response => {
-            this.peticionGetProveedor();
-            swal({title: "Proveedor "+response.data.nombre+" eliminado", text: " ",icon: "success",buttons:false, timer:1500})
-        }).catch(error => {
-            console.log(error.message);
-            swal({title: "ERROR AL ELIMINAR", text: " ",icon: "error",buttons:false, timer:1500})
-        })
-    }
-
-    //MODAL DE INSERTAR
-    modalInsertarProveedor = () => {
-        this.setState({ modalInsertarProveedor: !this.state.modalInsertarProveedor });
-    }
-
-    //MODAL DE VIEW
-    modalViewProveedor = () => {
-        this.setState({ modalViewProveedor: !this.state.modalViewProveedor });
-    }
-
-    //MODAL DE EDITAR
-    modalEditarProveedor = () => {
-        this.setState({ modalEditarProveedor: !this.state.modalEditarProveedor });
-    }
-
-    //SELECCIONAR PROVEEDOR PARA EDICIÓN
-    seleccionarProveedor = (proveedor) => {
-        this.setState({
-            editForm: {
-                id: proveedor.id,
-                nombre: proveedor.nombre,
-                contacto: proveedor.contacto,
-                telefono: proveedor.telefono,
-                direccion: proveedor.direccion,
-                email: proveedor.email,
-                estado: proveedor.estado
-            }
-        })
-    }
-
-    //PASAR INSUMO
-    pasarInsumo = (insumo) => {
-        this.setState({
-            datosinsumo: {
-                nombre: insumo.nombre,
-                material: insumo.material,
-                imagen: insumo.imagen,
-                tipo: insumo.tipo,
-                inventario: insumo.inventario
-            }
-        })
-    }
-    //INGRESO DE DATOS AL FORM
-    handleChangeProveedor = async e => {
-        e.persist();
-        await this.setState({
-            form: {
-                ...this.state.form,
-                [e.target.name]: e.target.value
-            }
-        });
-        console.log(this.state.form);
-    }
-
-    //INGRESO DE DATOS AL EDITFORM
-    handleChangeEditProveedor = async e => {
-        e.persist();
-        await this.setState({
-            editForm: {
-                ...this.state.editForm,
-                [e.target.name]: e.target.value
-            }
-        });
-        console.log(this.state.editForm);
-    }
-
-    //FUNCION DE ARRANQUE
-    componentDidMount() {
-        this.peticionGetProveedor();
-    }
     //CONSTRUCTOR
 
     constructor(props) {
@@ -190,6 +62,21 @@ export default class Proveedor extends Component {
                 email: '',
                 estado: ''
             },
+            valid: {
+                nombre: null,
+                contacto: null,
+                telefono: null,
+                direccion: null,
+                email: null,
+            },
+            mensaje: {
+                nombre: null,
+                contacto: null,
+                telefono: null,
+                direccion: null,
+                email: null,
+            },
+            button: true,
             customers: null,
             selectedCustomers: null,
             filters: {
@@ -202,12 +89,191 @@ export default class Proveedor extends Component {
         this.onGlobalFilterChange = this.onGlobalFilterChange.bind(this);
     }
 
+    //PETICIÓN GET
+    peticionGetProveedor = () => {
+        axios.get(url, autorizacion).then(response => {
+            this.setState({ data: response.data, loading: false });
+        }).catch(error => {
+            console.log(error.message);
+            this.setState({ loading: false });
+            swal({ title: "ERROR AL CONSULTAR", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+    }
+
+    //PETICIÓN GET INSUMOS
+    peticionGetInsumo = (id) => {
+        axios.get(url + 'insumo/' + id, autorizacion).then(response => {
+            this.setState({ datainsumos: response.data });
+        }).catch(error => {
+            console.log(error.message);
+            swal({ title: "ERROR AL CONSULTAR INSUMOS", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+    }
+
+    //PETICIÓN POST
+    peticionPostProveedor = async () => {
+
+        await axios.post(url, this.state.form, autorizacion).then(response => {
+            this.modalInsertarProveedor();
+            this.peticionGetProveedor();
+            swal({ title: "Proveedor " + response.data.nombre + " registrado", text: " ", icon: "success", buttons: false, timer: 1500 })
+
+        }).catch(error => {
+            console.log(error.message);
+            swal({ title: "ERROR AL REGISTRAR", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+
+    }
+
+    //PETICIÓN PUT
+    peticionPutProveedor = () => {
+        axios.put(url + this.state.editForm.id, this.state.editForm, autorizacion).then(response => {
+            this.modalEditarProveedor();
+            this.peticionGetProveedor();
+            swal({ title: "Proveedor " + response.data.nombre + " editado", text: " ", icon: "success", buttons: false, timer: 1500 })
+        }).catch(error => {
+            console.log(error.message);
+            swal({ title: "ERROR AL EDITAR", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+    }
+
+    //PETICIÓN ESTADO
+    peticionEstadoProveedor = (proveedor) => {
+        axios.put(url + 'estado/' + proveedor.id, this.state.editForm, autorizacion).then(response => {
+            this.peticionGetProveedor();
+            swal({ title: "Proveedor " + response.data.nombre + " eliminado", text: " ", icon: "success", buttons: false, timer: 1500 })
+        }).catch(error => {
+            console.log(error.message);
+            swal({ title: "ERROR AL ELIMINAR", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+    }
+
+    //CAMBIO DE VALIDACIONES
+    validFalse = () => {
+        this.setState({
+            button: true, valid: {
+                nombre: null,
+                contacto: null,
+                telefono: null,
+                direccion: null,
+                email: null,
+            }
+        });
+    }
+
+    //MODAL DE INSERTAR
+    modalInsertarProveedor = () => {
+        this.setState({ modalInsertarProveedor: !this.state.modalInsertarProveedor });
+        this.validFalse();
+    }
+
+    //MODAL DE VIEW
+    modalViewProveedor = () => {
+        this.setState({ modalViewProveedor: !this.state.modalViewProveedor });
+    }
+
+    //MODAL DE EDITAR
+    modalEditarProveedor = () => {
+        this.setState({ modalEditarProveedor: !this.state.modalEditarProveedor ,
+            valid: {
+                nombre: false,
+                contacto: false,
+                telefono: false,
+                direccion: false,
+                email: false,
+            },
+            button: true,
+        });
+    }
+
+    //SELECCIONAR PROVEEDOR PARA EDICIÓN
+    seleccionarProveedor = (proveedor) => {
+        this.setState({
+            editForm: {
+                id: proveedor.id,
+                nombre: proveedor.nombre,
+                contacto: proveedor.contacto,
+                telefono: proveedor.telefono,
+                direccion: proveedor.direccion,
+                email: proveedor.email,
+                estado: proveedor.estado
+            }
+        })
+    }
+
+    //PASAR INSUMO
+    pasarInsumo = (insumo) => {
+        this.setState({
+            datosinsumo: {
+                nombre: insumo.nombre,
+                material: insumo.material,
+                imagen: insumo.imagen,
+                tipo: insumo.tipo,
+                inventario: insumo.inventario
+            }
+        })
+    }
+    //INGRESO DE DATOS AL FORM
+    handleChangeProveedor = async e => {
+        e.persist();
+        const valid = this.validacion.valid(e.target.name, e.target.value);
+        const mensaje = this.validacion.mensaje(e.target.name, e.target.value);
+        await this.setState({
+            form: {
+                ...this.state.form,
+                [e.target.name]: e.target.value
+            },
+            valid: {
+                ...this.state.valid,
+                [e.target.name]: valid,
+            },
+            mensaje:{
+                ...this.state.mensaje,
+                [e.target.name]: mensaje,
+            }
+        });
+        this.ValidButton();
+    }
+    //BOTON DESABILITADO DE REGISTRAR
+    ValidButton = () => {
+        this.setState({
+            button: this.validacion.ValidButton(this.state.valid),
+        });
+    }
+
+    //INGRESO DE DATOS AL EDITFORM
+    handleChangeEditProveedor = async e => {
+        e.persist();
+        const valid = this.validacion.valid(e.target.name, e.target.value);
+        const mensaje = this.validacion.mensaje(e.target.name, e.target.value);
+        await this.setState({
+            editForm: {
+                ...this.state.editForm,
+                [e.target.name]: e.target.value
+            },
+            valid: {
+                ...this.state.valid,
+                [e.target.name]: valid,
+            },
+            mensaje:{
+                ...this.state.mensaje,
+                [e.target.name]: mensaje,
+            },
+        });
+        this.ValidButton();
+    }
+
+    //FUNCION DE ARRANQUE
+    componentDidMount() {
+        this.peticionGetProveedor();
+    }
+
     //RENDERIZAR BOTONES
     Botones(proveedor) {
         return <div className="btn-group btn-group-sm" role="group">
-            <button value={proveedor.id} className='btn btn-primary' onClick={() => { swal({title: "¿Desea editar al proveedor "+proveedor.nombre+"?",icon: "warning",buttons: ["Cancelar", "Editar"],dangerMode:true,}).then((respuesta) => {if(respuesta){this.seleccionarProveedor(proveedor); this.modalEditarProveedor()}});  }}><FontAwesomeIcon icon={faEdit} /></button>
-            <button className='btn btn-info' onClick={() => {  this.seleccionarProveedor(proveedor); this.modalViewProveedor() }} ><FontAwesomeIcon icon={faEye} /></button>
-            <button className='btn btn-danger' onClick={() => {swal({title: "¿Desea eliminar al proveedor "+proveedor.nombre+"?",icon: "warning",buttons: ["Cancelar", "Eliminar"],dangerMode:true,}).then((respuesta) => {if(respuesta){this.peticionEstadoProveedor(proveedor)}});}}><FontAwesomeIcon icon={faTrashAlt} /></button>
+            <button value={proveedor.id} className='btn btn-primary' onClick={() => { swal({ title: "¿Desea editar al proveedor " + proveedor.nombre + "?", icon: "warning", buttons: ["Cancelar", "Editar"], dangerMode: true, }).then((respuesta) => { if (respuesta) { this.seleccionarProveedor(proveedor); this.modalEditarProveedor() } }); }}><FontAwesomeIcon icon={faEdit} /></button>
+            <button className='btn btn-info' onClick={() => { this.seleccionarProveedor(proveedor); this.modalViewProveedor() }} ><FontAwesomeIcon icon={faEye} /></button>
+            <button className='btn btn-danger' onClick={() => { swal({ title: "¿Desea eliminar al proveedor " + proveedor.nombre + "?", icon: "warning", buttons: ["Cancelar", "Eliminar"], dangerMode: true, }).then((respuesta) => { if (respuesta) { this.peticionEstadoProveedor(proveedor) } }); }}><FontAwesomeIcon icon={faTrashAlt} /></button>
         </div>;
     }
 
@@ -224,7 +290,7 @@ export default class Proveedor extends Component {
     renderHeader() {
         return (
             <div className="flex justify-content-between align-items-center">
-                <h5 className="m-0 h5"></h5>
+                <h5 className="m-0 h5"> </h5>
                 <span className="p-input-icon-left">
                     <i className="pi pi-search" />
                     <InputText value={this.state.globalFilterValue} onChange={this.onGlobalFilterChange} placeholder="Buscar" />
@@ -280,16 +346,16 @@ export default class Proveedor extends Component {
                             <Row>
                                 <Col md={6}>
                                     <Label htmlFor='nombre'>Nombre:</Label>
-                                    <Input invalid type='text' name='nombre' id='nombre' onChange={this.handleChangeProveedor} />
+                                    <Input  valid={this.state.valid.nombre == null ? false : !this.state.valid.nombre} invalid={this.state.valid.nombre} type='text' name='nombre' id='nombre' onChange={this.handleChangeProveedor} />
                                     <FormFeedback>
-                                        Complete el campo
+                                    {this.state.mensaje.nombre}
                                     </FormFeedback>
                                 </Col>
                                 <Col md={6}>
                                     <Label htmlFor='contacto'>Contacto:</Label>
-                                    <Input invalid type='text' name='contacto' id='contacto' onChange={this.handleChangeProveedor} />
+                                    <Input valid={this.state.valid.contacto == null ? false : !this.state.valid.contacto} invalid={this.state.valid.contacto} type='text' name='contacto' id='contacto' onChange={this.handleChangeProveedor} />
                                     <FormFeedback>
-                                        Complete el campo
+                                    {this.state.mensaje.contacto}
                                     </FormFeedback>
                                 </Col>
                             </Row>
@@ -299,16 +365,16 @@ export default class Proveedor extends Component {
                             <Row>
                                 <Col md={6}>
                                     <Label htmlFor='direccion'>Dirección:</Label>
-                                    <Input invalid type='text' name='direccion' id='direccion' onChange={this.handleChangeProveedor} />
+                                    <Input valid={this.state.valid.direccion == null ? false : !this.state.valid.direccion} invalid={this.state.valid.direccion} type='text' name='direccion' id='direccion' onChange={this.handleChangeProveedor} />
                                     <FormFeedback>
-                                        Complete el campo
+                                    {this.state.mensaje.direccion}
                                     </FormFeedback>
                                 </Col>
                                 <Col md={6}>
                                     <Label htmlFor='telefono'>Teléfono:</Label>
-                                    <Input invalid type='text' name='telefono' id='telefono' onChange={this.handleChangeProveedor} />
+                                    <Input valid={this.state.valid.telefono == null ? false : !this.state.valid.telefono} invalid={this.state.valid.telefono} type='number' name='telefono' id='telefono' onChange={this.handleChangeProveedor} />
                                     <FormFeedback>
-                                        Complete el campo
+                                    {this.state.mensaje.telefono}
                                     </FormFeedback>
                                 </Col>
                             </Row>
@@ -317,9 +383,9 @@ export default class Proveedor extends Component {
                             <Row>
                                 <Col md={12}>
                                     <Label htmlFor='email'>Email:</Label>
-                                    <Input invalid type='text' name='email' id='email' onChange={this.handleChangeProveedor} />
+                                    <Input valid={this.state.valid.email == null ? false : !this.state.valid.email} invalid={this.state.valid.email} type='email' name='email' id='email' onChange={this.handleChangeProveedor} />
                                     <FormFeedback>
-                                        Complete el campo
+                                    {this.state.mensaje.email}
                                     </FormFeedback>
                                 </Col>
                             </Row>
@@ -327,9 +393,9 @@ export default class Proveedor extends Component {
                     </ModalBody>
 
                     <ModalFooter>
-                        <button className='btn btn-primary' onClick={() => this.peticionPostProveedor()}>
+                        <Button disabled={this.state.button} color='primary' onClick={() => this.peticionPostProveedor()}>
                             Insertar
-                        </button>
+                        </Button>
                         <button className='btn btn-danger' onClick={() => this.modalInsertarProveedor()}>
                             Cancelar
                         </button>
@@ -350,16 +416,16 @@ export default class Proveedor extends Component {
                             <Row>
                                 <Col md={6}>
                                     <Label htmlFor='nombre'>Nombre:</Label>
-                                    <Input invalid type='text' name='nombre' id='nombre' onChange={this.handleChangeEditProveedor} value={editForm.nombre || ''} />
+                                    <Input valid={this.state.valid.nombre == null ? false : !this.state.valid.nombre} invalid={this.state.valid.nombre} type='text' name='nombre' id='nombre' onChange={this.handleChangeEditProveedor} value={editForm.nombre || ''} />
                                     <FormFeedback>
-                                        Complete el campo
+                                        {this.state.mensaje.nombre}
                                     </FormFeedback>
                                 </Col>
                                 <Col md={6}>
                                     <Label htmlFor='contacto'>Contacto:</Label>
-                                    <Input invalid type='text' name='contacto' id='contacto' onChange={this.handleChangeEditProveedor} value={editForm.contacto || ''} />
+                                    <Input valid={this.state.valid.contacto == null ? false : !this.state.valid.contacto} invalid={this.state.valid.contacto} type='text' name='contacto' id='contacto' onChange={this.handleChangeEditProveedor} value={editForm.contacto || ''} />
                                     <FormFeedback>
-                                        Complete el campo
+                                    {this.state.mensaje.contacto}
                                     </FormFeedback>
                                 </Col>
                             </Row>
@@ -369,16 +435,16 @@ export default class Proveedor extends Component {
                             <Row>
                                 <Col md={6}>
                                     <Label htmlFor='direccion'>Dirección:</Label>
-                                    <Input invalid type='text' name='direccion' id='direccion' onChange={this.handleChangeEditProveedor} value={editForm.direccion || ''} />
+                                    <Input valid={this.state.valid.direccion == null ? false : !this.state.valid.direccion} invalid={this.state.valid.direccion} type='text' name='direccion' id='direccion' onChange={this.handleChangeEditProveedor} value={editForm.direccion || ''} />
                                     <FormFeedback>
-                                        Complete el campo
+                                    {this.state.mensaje.direccion}
                                     </FormFeedback>
                                 </Col>
                                 <Col md={6}>
                                     <Label htmlFor='telefono'>Teléfono:</Label>
-                                    <Input invalid type='text' name='telefono' id='telefono' onChange={this.handleChangeEditProveedor} value={editForm.telefono || ''} />
+                                    <Input valid={this.state.valid.telefono == null ? false : !this.state.valid.telefono} invalid={this.state.valid.telefono} type='number' name='telefono' id='telefono' onChange={this.handleChangeEditProveedor} value={editForm.telefono || ''} />
                                     <FormFeedback>
-                                        Complete el campo
+                                    {this.state.mensaje.telefono}
                                     </FormFeedback>
                                 </Col>
                             </Row>
@@ -387,9 +453,9 @@ export default class Proveedor extends Component {
                             <Row>
                                 <Col md={12}>
                                     <Label htmlFor='email'>Email:</Label>
-                                    <Input invalid type='text' name='email' id='email' onChange={this.handleChangeEditProveedor} value={editForm.email || ''} />
+                                    <Input valid={this.state.valid.email == null ? false : !this.state.valid.email} invalid={this.state.valid.email} type='email' name='email' id='email' onChange={this.handleChangeEditProveedor} value={editForm.email || ''} />
                                     <FormFeedback>
-                                        Complete el campo
+                                    {this.state.mensaje.email}
                                     </FormFeedback>
                                 </Col>
                             </Row>
@@ -397,20 +463,20 @@ export default class Proveedor extends Component {
                     </ModalBody>
 
                     <ModalFooter>
-                        <button className='btn btn-primary' onClick={() => this.peticionPutProveedor()}>
+                        <Button  disabled={this.state.button}  color='primary' onClick={() => this.peticionPutProveedor()}>
                             Actualizar
-                        </button>
-                        <button className='btn btn-danger' onClick={() => this.modalEditarProveedor()}>
+                        </Button>
+                        <Button className='btn btn-danger' onClick={() => this.modalEditarProveedor()}>
                             Cancelar
-                        </button>
+                        </Button>
                     </ModalFooter>
                 </Modal>
 
                 {/* MODAL DE VISTA */}
-                <Modal isOpen={this.state.modalViewProveedor} toggle={() => { this.setState({ datainsumos: [], insumo: false }); toggle3();  }}>
+                <Modal isOpen={this.state.modalViewProveedor} toggle={() => { this.setState({ datainsumos: [], insumo: false }); toggle3(); }}>
                     <ModalHeader >
                         <div><br /><h3>Proveedor {editForm.nombre}</h3></div>
-                        <button type="button" className="close" onClick={() => {this.modalViewProveedor(); this.setState({ datainsumos: [], insumo: false })}}>
+                        <button type="button" className="close" onClick={() => { this.modalViewProveedor(); this.setState({ datainsumos: [], insumo: false }) }}>
                             <FontAwesomeIcon icon={faClose} />
                         </button>
                     </ModalHeader>
@@ -482,10 +548,10 @@ export default class Proveedor extends Component {
                                 </ModalHeader>
                                 <ModalBody>
                                     <ListGroup>
-                                        <ListGroupItem style={{"display":"flex", "justifyContent": "center"}}>
+                                        <ListGroupItem style={{ "display": "flex", "justifyContent": "center" }}>
                                             {datosinsumo.imagen
-                                                ? <img src={baseUrl + "files/" + datosinsumo.imagen} style={{"width" : "70%", "borderRadius": "10%"}} alt={datosinsumo.id} />
-                                                : <img src={baseUrl + "files/error.png"} style={{"width" : "70%", "borderRadius": "10%"}} alt={datosinsumo.id} />
+                                                ? <img src={baseUrl + "files/" + datosinsumo.imagen} style={{ "width": "70%", "borderRadius": "10%" }} alt={datosinsumo.id} />
+                                                : <img src={baseUrl + "files/error.png"} style={{ "width": "70%", "borderRadius": "10%" }} alt={datosinsumo.id} />
                                             }
 
                                         </ListGroupItem>
@@ -510,7 +576,7 @@ export default class Proveedor extends Component {
                     </ModalBody>
 
                     <ModalFooter>
-                        <button className='btn btn-primary' onClick={() => { this.modalViewProveedor(); this.setState({ datainsumos: [], insumo: false  }) }}>
+                        <button className='btn btn-primary' onClick={() => { this.modalViewProveedor(); this.setState({ datainsumos: [], insumo: false }) }}>
                             Cerrar
                         </button>
                     </ModalFooter>

@@ -2,14 +2,13 @@ import React, { Component, } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { InputText } from 'primereact/inputtext';
-import { FileUpload } from 'primereact/fileupload';
 import { FilterMatchMode } from 'primereact/api';
 import axios from 'axios';
-import { MultiSelect } from 'primereact/multiselect';
 import Select from 'react-select'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClose, faEdit, faEye, faPlus, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
-import { Alert, Badge, Button, Col, Collapse, Dropdown, FormFeedback, FormGroup, FormText, Input, Label, ListGroup, ListGroupItem, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
+import Validacion from '../../Utils/Validacion';
+import { Alert, Badge, Button, Col, FormFeedback, FormGroup, FormText, Input, Label, ListGroup, ListGroupItem, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 import { autorizacion, baseUrl, autorizacionFiles } from '../../Utils/Api';
 import swal from 'sweetalert';
 
@@ -23,202 +22,11 @@ import 'primeflex/primeflex.css';
 const url = baseUrl + 'producto/';
 
 export default class Producto extends Component {
+
+    validacion = new Validacion();
+
     //DATOS 
     state = {}
-
-    //PETICION GET
-    peticionGetProducto = () => {
-        axios.get(url, autorizacion).then(response => {
-            this.setState({ data: response.data, loading: false });
-        }).catch(error => {
-            console.log(error.message);
-        })
-    }
-
-    //PETICIÓN GET CATEGORIA
-    peticionGetCategoria = () => {
-        axios.get(url + 'categoria/', autorizacion).then(response => {
-            const datos = [];
-
-            response.data.map((categoria) => {
-                const dato = { value: categoria.id, label: categoria.nombre }
-                datos.push(dato);
-            })
-
-            this.setState({ datacategorias: datos });
-        }).catch(error => {
-            console.log(error.message);
-            swal({ title: "ERROR AL CONSULTAR CATEGORIAS", text: " ", icon: "error", buttons: false, timer: 1500 })
-        })
-    }
-
-    //PETICION POST
-    peticionPostProducto = async () => {
-        var img = null;
-        if (this.state.files != null) {
-            var bodyFormData = new FormData();
-            bodyFormData.append('files', this.state.files);
-            await axios.post(baseUrl + "files/upload", bodyFormData, autorizacionFiles).then(response => {
-                img = response.data.message;
-            }).catch(error => {
-                console.log(error.message);
-            })
-        }
-        this.state.producto.imagen = img;
-
-        await axios.post(url, this.state.producto, autorizacion).then(response => {
-            this.modalInsertarProducto();
-            this.peticionGetProducto();
-
-        }).catch(error => {
-            console.log(error.message);
-        })
-
-    }
-
-    //PETICION POST CATEGORIA
-    peticionPostCategoria = async () => {
-
-        await axios.post(url + "categoria", this.state.categoria, autorizacion).then(response => {
-            this.modalInsertarCategoria();
-            this.peticionGetCategoria();
-
-        }).catch(error => {
-            console.log(error.message);
-        })
-
-    }
-
-    //PETICION PUT
-    peticionPutProducto = () => {
-        axios.put(url + this.state.editProducto.id, this.state.editProducto, autorizacion).then(response => {
-            this.modalInsertarProducto();
-            this.peticionGetProducto();
-
-            swal("Good job!", "You clicked the button!", "success");
-        })
-    }
-
-    //PETICIÓN ESTADO
-    peticionEstadoProducto = (producto) => {
-        axios.put(url + 'estado/' + producto.id, this.state.editProducto, autorizacion).then(response => {
-            this.peticionGetProducto();
-            swal("Good job!", "You clicked the button!", "success");
-        }).catch(error => {
-            console.log(error.message);
-            swal("ERROR AL ELIMINAR", 'errores', "error");
-        })
-    }
-
-    //MODAL DE INSERTAR
-    modalInsertarProducto = () => {
-        this.setState({ modalInsertarProducto: !this.state.modalInsertarProducto });
-    }
-
-    //MODAL DE INSERTAR CATEGORIA
-    modalInsertarCategoria = () => {
-        this.setState({ modalInsertarCategoria: !this.state.modalInsertarCategoria });
-    }
-
-    //MODAL DE EDITAR
-    modalEditarProducto = () => {
-        this.setState({ modalEditarProducto: !this.state.modalEditarProducto });
-    }
-
-    //MODAL DE VIEW
-    modalViewProducto = () => {
-        this.setState({ modalViewProducto: !this.state.modalViewProducto });
-    }
-
-    //SELECCIONAR producto PARA EDICIÓN
-    seleccionarProducto = (producto) => {
-        this.setState({
-            editProducto: {
-                id: producto.id,
-                nombre: producto.nombre,
-                descripcion: producto.descripcion,
-                inventario: producto.inventario,
-                imagen: producto.imagen,
-                categoria: producto.categoria,
-                estado: producto.estado
-
-            }
-        })
-    }
-
-    //PASAR CATEGORIA
-    pasarCategoria = (categoria) => {
-        this.setState({
-            datoscategoria: {
-                nombre: categoria.nombre,
-                filtro: categoria.filtro
-            }
-        })
-    }
-
-    //INGRESO DE DATOS AL FORM
-    handleChangeProducto = async e => {
-        e.persist();
-        await this.setState({
-            producto: {
-                ...this.state.producto,
-                [e.target.name]: e.target.value
-            }
-        });
-        console.log(this.state.producto);
-    }
-    //INGRESO DE FILES
-    handleChangeFiles = (e) => {
-        this.setState({
-            files: e.target.files[0],
-        })
-    }
-
-    //INGRESO DE DATOS DE CATEGORIA AL PRODUCTO
-    handleChangeCategoria = async (e) => {
-
-        const lista = []
-        e.map((e) => { lista.push(e.value) });
-
-        await this.setState({
-            producto: {
-                ...this.state.producto,
-                categoria: lista
-            }
-        });
-
-        console.log(this.state.producto);
-    }
-
-    //INGRESO DE DATOS DE CATEGORIA 
-    handleChangeInsertarCategoria = async (e) => {
-        e.persist();
-        await this.setState({
-            categoria: {
-                ...this.state.categoria,
-                [e.target.name]: e.target.value
-            }
-        });
-        console.log(this.state.categoria);
-    }
-
-    //INGRESO DE DATOS AL EDITPRODUCTO
-    handleChangeProductoEditProducto = async e => {
-        e.persist();
-        await this.setState({
-            editProducto: {
-                ...this.state.editProducto,
-                [e.target.name]: e.target.value
-            }
-        });
-        console.log(this.state.editProducto);
-    }
-
-    //FUNCION DE ARRANQUE
-    componentDidMount() {
-        this.peticionGetProducto();
-        this.peticionGetCategoria();
-    };
 
     //CONSTRUCTOR
     constructor(props) {
@@ -246,8 +54,25 @@ export default class Producto extends Component {
                 categoria: [],
                 estado: '',
                 inventario: null,
-                visible: ''
+                visible: null,
             },
+            valid: {
+                nombre: null,
+                categoria: null
+            },
+            validCategoria: {
+                nombre: null,
+            },
+            mensaje: {
+                nombre: null,
+                categoria: null,
+            },
+            mensajeCategoria: {
+                nombre: null,
+                categoria: null,
+            },
+            button: true,
+            buttonCategoria: true,
             categoria: {
                 id: '',
                 nombre: ''
@@ -260,10 +85,9 @@ export default class Producto extends Component {
             globalFilterValue: '',
             loading: true
         }
-        this.cities = [
-            { value: 'chocolate', label: 'Chocolate' },
-            { value: 'strawberry', label: 'Strawberry' },
-            { value: 'vanilla', label: 'Vanilla' }
+        this.visible = [
+            { value: true, label: "Visible" },
+            { value: false, label: "No visible" },
         ];
         this.Botones = this.Botones.bind(this);
         this.onGlobalFilterChangeProducto = this.onGlobalFilterChangeProducto.bind(this);
@@ -271,7 +95,356 @@ export default class Producto extends Component {
         this.itemTemplate = this.itemTemplate.bind(this);
     }
 
+    //PETICION GET
+    peticionGetProducto = () => {
+        axios.get(url, autorizacion).then(response => {
+            this.setState({ data: response.data, loading: false });
+        }).catch(error => {
+            console.log(error.message);
+            this.setState({ loading: false });
+            swal({ title: "ERROR AL CONSULTAR", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+    }
 
+    //PETICIÓN GET CATEGORIA
+    peticionGetCategoria = () => {
+        axios.get(url + 'categoria/', autorizacion).then(response => {
+            const datos = [];
+
+            response.data.forEach((categoria) => {
+                const dato = { value: categoria.id, label: categoria.nombre }
+                datos.push(dato);
+            })
+
+            this.setState({ datacategorias: datos });
+        }).catch(error => {
+            console.log(error.message);
+            swal({ title: "ERROR AL CONSULTAR CATEGORIAS", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+    }
+
+    //CONVERTIR CATEGORIAS DEL PRODUCTO
+    categoriasProducto = (e) => {
+        const datos = [];
+        e.forEach((categoria) => {
+            datos.push({ value: categoria.id, label: categoria.nombre });
+        });
+        return datos;
+    }
+
+    //PETICION POST
+    peticionPostProducto = async () => {
+        var img = null;
+        if (this.state.files != null) {
+            var bodyFormData = new FormData();
+            bodyFormData.append('files', this.state.files);
+            await axios.post(baseUrl + "files/upload", bodyFormData, autorizacionFiles).then(response => {
+                img = response.data.message;
+            }).catch(error => {
+                console.log(error.message);
+            })
+        }
+        this.state.producto.imagen = img;
+
+        await axios.post(url, this.state.producto, autorizacion).then(response => {
+            this.modalInsertarProducto();
+            this.peticionGetProducto();
+            swal({ title: "Producto " + response.data.nombre + " registrado", text: " ", icon: "success", buttons: false, timer: 1500 })
+
+        }).catch(error => {
+            console.log(error.message);
+            swal({ title: "ERROR AL REGISTRAR", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+
+    }
+
+    //PETICION POST CATEGORIA
+    peticionPostCategoria = async () => {
+
+        await axios.post(url + "categoria", this.state.categoria, autorizacion).then(response => {
+            this.modalInsertarCategoria();
+            this.peticionGetCategoria();
+            swal({ title: "Categoria " + response.data.nombre + " registrado", text: " ", icon: "success", buttons: false, timer: 1500 })
+        }).catch(error => {
+            console.log(error.message);
+            swal({ title: "ERROR AL REGISTRAR CATEGORIA", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+
+    }
+
+    //PETICION PUT
+    peticionPutProducto = async () => {
+        var img = this.state.editProducto.imagen;
+        if (this.state.files != null) {
+            var bodyFormData = new FormData();
+            bodyFormData.append('files', this.state.files);
+            await axios.post(baseUrl + "files/upload", bodyFormData, autorizacionFiles).then(response => {
+                img = response.data.message;
+            }).catch(error => {
+                console.log(error.message);
+            })
+        }
+        this.state.editProducto.imagen = img;
+        const lista = [];
+        this.state.editProducto.categoria.forEach((e) => {
+            if (e.id != null) {
+                lista.push(e.id)
+            } else {
+                lista.push(e)
+            }
+        });
+        this.state.editProducto.categoria = lista;
+
+        delete this.state.editProducto.inventario;
+        console.log(this.state.editProducto)
+        await axios.put(url + this.state.editProducto.id, this.state.editProducto, autorizacion).then(response => {
+            this.peticionGetProducto();
+            this.modalEditarProducto();
+
+            swal({ title: "Producto " + response.data.nombre + " editado", text: " ", icon: "success", buttons: false, timer: 1500 })
+        }).catch(error => {
+            console.log(error.message);
+            swal({ title: "ERROR AL EDITAR", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+    }
+
+    //PETICIÓN ESTADO
+    peticionEstadoProducto = (producto) => {
+        axios.put(url + 'estado/' + producto.id, this.state.editProducto, autorizacion).then(response => {
+            this.peticionGetProducto();
+            swal({ title: "Producto " + response.data.nombre + " eliminado", text: " ", icon: "success", buttons: false, timer: 1500 })
+        }).catch(error => {
+            console.log(error.message);
+            swal({ title: "ERROR AL ELIMINAR", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+    }
+
+    //CAMBIO DE VALIDACIONES
+    validFalse = () => {
+        this.setState({
+            button: true, valid: {
+                nombre: null,
+                categoria: null,
+            }
+        });
+    }
+    //MODAL DE INSERTAR
+    modalInsertarProducto = () => {
+        this.setState({ modalInsertarProducto: !this.state.modalInsertarProducto });
+        this.validFalse();
+    }
+
+    //MODAL DE INSERTAR CATEGORIA
+    modalInsertarCategoria = () => {
+        this.setState({ modalInsertarCategoria: !this.state.modalInsertarCategoria });
+    }
+
+    //MODAL DE EDITAR
+    modalEditarProducto = () => {
+        this.setState({
+            modalEditarProducto: !this.state.modalEditarProducto, files: null,
+            valid: {
+                nombre: false,
+                categoria: false,
+            },
+            button: true,
+        });
+    }
+
+    //MODAL DE VIEW
+    modalViewProducto = () => {
+        this.setState({ modalViewProducto: !this.state.modalViewProducto });
+    }
+
+    //SELECCIONAR producto PARA EDICIÓN
+    seleccionarProducto = (producto) => {
+        this.setState({
+            editProducto: {
+                id: producto.id,
+                nombre: producto.nombre,
+                descripcion: producto.descripcion,
+                inventario: producto.inventario,
+                imagen: producto.imagen,
+                categoria: producto.categoria,
+                estado: producto.estado,
+                visible: producto.visible,
+
+            }
+        })
+    }
+
+    //PASAR CATEGORIA
+    pasarCategoria = (categoria) => {
+        this.setState({
+            datoscategoria: {
+                nombre: categoria.nombre,
+                filtro: categoria.filtro
+            }
+        })
+    }
+
+    //INGRESO DE DATOS AL FORM
+    handleChangeProducto = async e => {
+        e.persist();
+        const valid = this.validacion.valid(e.target.name, e.target.value);
+        const mensaje = this.validacion.mensaje(e.target.name, e.target.value);
+        await this.setState({
+            producto: {
+                ...this.state.producto,
+                [e.target.name]: e.target.value
+            },
+            valid: {
+                ...this.state.valid,
+                [e.target.name]: valid,
+            },
+            mensaje: {
+                ...this.state.mensaje,
+                [e.target.name]: mensaje,
+            }
+        });
+        this.ValidButton();
+        console.log(this.state.producto);
+    }
+
+    //BOTON DESABILITADO DE REGISTRAR
+    ValidButton = () => {
+        delete this.state.valid.descripcion;
+        delete this.state.valid.imagen;
+        this.setState({
+            button: this.validacion.ValidButton(this.state.valid),
+        });
+    }
+    //BOTON DESABILITADO DE REGISTRAR
+    ValidButtonCategoria = () => {
+        this.setState({
+            buttonCategoria: this.validacion.ValidButton(this.state.validCategoria),
+        });
+    }
+    //INGRESO DE FILES
+    handleChangeFiles = (e) => {
+        this.setState({
+            files: e.target.files[0],
+        })
+    }
+
+    //INGRESO DE DATOS DE CATEGORIA AL PRODUCTO
+    handleChangeCategoria = async (e) => {
+
+        const lista = []
+        e.forEach((e) => { lista.push(e.value) });
+        const valid = this.validacion.valid("categoria", e);
+        const mensaje = this.validacion.mensaje("categoria", e);
+        await this.setState({
+            producto: {
+                ...this.state.producto,
+                categoria: lista
+            },
+            valid: {
+                ...this.state.valid,
+                categoria: valid,
+            },
+            mensaje: {
+                ...this.state.mensaje,
+                categoria: mensaje,
+            }
+        });
+        this.ValidButton();
+
+        console.log(this.state.producto);
+    }
+    //INGRESO DE DATOS DE CATEGORIA AL PRODUCTOEDIT
+    handleChangeEditCategoria = async (e) => {
+
+        const lista = []
+        const valid = this.validacion.valid("categoria", e);
+        const mensaje = this.validacion.mensaje("categoria", e);
+        e.forEach((e) => { lista.push(e.value) });
+        console.log(lista)
+        await this.setState({
+            producto: {
+                ...this.state.producto,
+                categoria: lista
+            },
+            valid: {
+                ...this.state.valid,
+                categoria: valid,
+            },
+            mensaje: {
+                ...this.state.mensaje,
+                categoria: mensaje,
+            }
+        });
+        this.ValidButton();
+
+        console.log(this.state.editProducto);
+    }
+    //INGRESO DE VISIBLE AL PRODUCTOEDIT
+    handleChangeVisible = async (e) => {
+        console.log(e.value)
+        await this.setState({
+            editProducto: {
+                ...this.state.editProducto,
+                visible: e.value,
+
+            },
+            button: false,
+        });
+
+        console.log(this.state.editProducto);
+    }
+
+    //INGRESO DE DATOS DE CATEGORIA 
+    handleChangeInsertarCategoria = async (e) => {
+        e.persist();
+        const valid = this.validacion.valid(e.target.name, e.target.value);
+        const mensaje = this.validacion.mensaje(e.target.name, e.target.value);
+        await this.setState({
+            categoria: {
+                ...this.state.categoria,
+                [e.target.name]: e.target.value
+            },
+            validCategoria: {
+                ...this.state.validCategoria,
+                [e.target.name]: valid,
+            },
+            mensajeCategoria: {
+                ...this.state.mensajeCategoria,
+                [e.target.name]: mensaje,
+            },
+        });
+        this.ValidButtonCategoria();
+
+        console.log(this.state.categoria);
+    }
+
+    //INGRESO DE DATOS AL EDITPRODUCTO
+    handleChangeProductoEditProducto = async e => {
+        e.persist();
+        const valid = this.validacion.valid(e.target.name, e.target.value);
+        const mensaje = this.validacion.mensaje(e.target.name, e.target.value);
+        await this.setState({
+            editProducto: {
+                ...this.state.editProducto,
+                [e.target.name]: e.target.value
+            },
+            valid: {
+                ...this.state.valid,
+                [e.target.name]: valid,
+            },
+            mensaje: {
+                ...this.state.mensaje,
+                [e.target.name]: mensaje,
+            }
+        });
+        this.ValidButton();
+        console.log(this.state.editProducto);
+    }
+
+    //FUNCION DE ARRANQUE
+    componentDidMount() {
+        this.peticionGetProducto();
+        this.peticionGetCategoria();
+    };
 
 
     //RENDERIZAR IMAGEN
@@ -319,13 +492,15 @@ export default class Producto extends Component {
     //RENDERIZAR ENCABEZADO DE LA DATATABLE
     renderHeaderProducto() {
         return (
-            <div className="flex justify-content-between align-items-center">
-                <h5 className="m-0 h5"></h5>
-                <span className="p-input-icon-left">
-                    <i className="pi pi-search" />
-                    <InputText value={this.state.globalFilterValue} onChange={this.onGlobalFilterChangeProducto} placeholder="Buscar" />
-                </span>
-            </div>
+            <React.Fragment>
+                <div className="flex justify-content-between align-items-center">
+                    <h5 className="m-0 h5"> </h5>
+                    <span className="p-input-icon-left">
+                        <i className="pi pi-search" />
+                        <InputText value={this.state.globalFilterValue} onChange={this.onGlobalFilterChangeProducto} placeholder="Buscar" />
+                    </span>
+                </div>
+            </React.Fragment>
         )
     }
     //EVENTOS DE SUBIR ARCHIVO
@@ -349,6 +524,7 @@ export default class Producto extends Component {
     }
     //ARCHIVO
     imageHandler = (e) => {
+        this.setState({ button: false, editProducto: { ...this.state.editProducto, imagen: null, } });
         this.handleChangeFiles(e);
         const reader = new FileReader();
         reader.onload = () => {
@@ -366,15 +542,12 @@ export default class Producto extends Component {
         const toggle2 = () => this.modalEditarProducto();
         const toggle3 = () => this.modalViewProducto();
         const toggle4 = () => this.modalInsertarCategoria();
-        const chooseOptions = { icon: 'pi pi-fw pi-images', iconOnly: true, className: 'btn-primary' };
-        const uploadOptions = { icon: 'pi pi-fw pi-cloud-upload', iconOnly: true, className: 'custom-upload-btn p-button-success p-button-rounded p-button-outlined' };
-        const cancelOptions = { icon: 'pi pi-fw pi-times', iconOnly: true, className: 'btn-danger' };
-
+        
         return (
             <div className="datatable-doc-demo">
                 <div className="flex justify-content-between align-items-center">
                     <h5 className="m-0 h5">Producto</h5>
-                    <button className='btn btn-primary' onClick={() => { this.setState({ producto: {}, files: null , profileImg: this.state.img }); this.modalInsertarProducto() }} ><FontAwesomeIcon icon={faPlus} style={{ "marginRight": "1rem" }} /><span className='menu-title'>Agregar</span></button>
+                    <button className='btn btn-primary' onClick={() => { this.setState({ producto: {}, files: null, profileImg: this.state.img }); this.modalInsertarProducto() }} ><FontAwesomeIcon icon={faPlus} style={{ "marginRight": "1rem" }} /><span className='menu-title'>Agregar</span></button>
                 </div>
                 <br />
                 <div className='card'>
@@ -417,12 +590,12 @@ export default class Producto extends Component {
                                 </Col>
                                 <Col md={6}>
                                     <Label htmlFor='nombre'>Nombre:</Label>
-                                    <Input invalid type='text' name='nombre' id='nombre' onChange={this.handleChangeProducto} />
+                                    <Input valid={this.state.valid.nombre == null ? false : !this.state.valid.nombre} invalid={this.state.valid.nombre} type='text' name='nombre' id='nombre' onChange={this.handleChangeProducto} />
                                     <FormText>
                                         Nombre del producto.
                                     </FormText>
                                     <FormFeedback>
-                                        Complete el campo
+                                        {this.state.mensaje.nombre}
                                     </FormFeedback>
                                     <Label htmlFor='descripcion'>Descripción:</Label>
                                     <Input type='textarea' name='descripcion' id='descripcion' onChange={this.handleChangeProducto} />
@@ -431,12 +604,16 @@ export default class Producto extends Component {
                                     </FormText>
                                     <Label htmlFor='categoria'>Categoria:</Label>
                                     <br />
-                                    <Select options={datacategorias} isMulti name='categoria' onChange={this.handleChangeCategoria} placeholder="Seleccione la categoria" />
+                                    <Select className={this.state.valid.categoria === true ? 'invalid-select2 is-invalid' : ''} options={datacategorias} isMulti name='categoria' onChange={this.handleChangeCategoria} placeholder="Seleccione la categoria" />
                                     <FormText>
                                         Categoria del producto.
                                     </FormText>
                                     <FormFeedback>
-                                        Complete inventarioel campo
+                                        {this.state.valid.categoria === true ?
+
+                                            this.state.mensaje.categoria
+
+                                            : ''}
                                     </FormFeedback>
                                     <br />
                                     <button className='btn btn-primary' onClick={() => { this.setState({ categoria: null }); this.modalInsertarCategoria() }}>
@@ -448,9 +625,9 @@ export default class Producto extends Component {
                     </ModalBody>
 
                     <ModalFooter>
-                        <button className='btn btn-primary' onClick={() => this.peticionPostProducto()}>
+                        <Button disabled={this.state.button} color='primary' onClick={() => this.peticionPostProducto()}>
                             Insertar
-                        </button>
+                        </Button>
                         <button className='btn btn-danger' onClick={() => { this.setState({ profileImg: this.state.img }); this.modalInsertarProducto(); }}>
                             Cancelar
                         </button>
@@ -458,10 +635,10 @@ export default class Producto extends Component {
                 </Modal>
 
                 {/* MODAL DE EDITAR */}
-                
-                <Modal isOpen={this.state.modalEditarProducto} toggle={toggle2} size='lg'>
+
+                <Modal isOpen={this.state.modalEditarProducto} toggle={() => { toggle2(); this.setState({ profileImg: this.state.img }) }} size='lg'>
                     <ModalHeader>
-                    <span>Agregar Producto</span>
+                        <span>Agregar Producto</span>
                         <button type="button" className="close" onClick={() => { this.setState({ profileImg: this.state.img }); this.modalEditarProducto(); }}>
                             <FontAwesomeIcon icon={faClose} />
                         </button>
@@ -475,31 +652,44 @@ export default class Producto extends Component {
                                         <input className='custom-file-input' type="file" name="files" accept="image/*" onChange={this.imageHandler} />
                                         <label data-browse="Seleccionar" className="custom-file-label" htmlFor="customFile">Seleccionar imagen...</label>
                                     </div>
-                                    <img src={profileImg} alt="cargado" style={{ "width": "100%", "borderRadius": "0px 0px 10px 10px", "padding": "20px 20px 0px 20px" }} />
+                                    <img src={editProducto.imagen != null ? baseUrl + "files/" + editProducto.imagen : profileImg} alt="cargado" style={{ "width": "100%", "borderRadius": "0px 0px 10px 10px", "padding": "20px 20px 0px 20px" }} />
                                 </Col>
                                 <Col md={6}>
                                     <Label htmlFor='nombre'>Nombre:</Label>
-                                    <Input invalid type='text' name='nombre' id='nombre' onChange={this.handleChangeProductoEditProducto} value={editProducto.nombre || ''} />
+                                    <Input valid={this.state.valid.nombre == null ? false : !this.state.valid.nombre} invalid={this.state.valid.nombre} type='text' name='nombre' id='nombre' onChange={this.handleChangeProductoEditProducto} value={editProducto.nombre || ''} />
+                                    <FormFeedback>
+                                        {this.state.mensaje.nombre}
+                                    </FormFeedback>
                                     <FormText>
                                         Nombre del producto.
                                     </FormText>
-                                    <FormFeedback>
-                                        Complete el campo
-                                    </FormFeedback>
+
                                     <Label htmlFor='descripcion'>Descripción:</Label>
-                                    <Input type='textarea' name='descripcion' id='descripcion' onChange={this.handleChangeProductoEditProducto} value={editProducto.descripcion || ''}/>
+                                    <Input type='textarea' name='descripcion' id='descripcion' placeholder={editProducto.descripcion ? '' : "Sin Descripción registrada"} onChange={this.handleChangeProductoEditProducto} value={editProducto.descripcion || ''} />
                                     <FormText>
                                         Descripción del producto.
                                     </FormText>
                                     <Label htmlFor='categoria'>Categoria:</Label>
                                     <br />
-                                    <Select options={datacategorias} isMulti name='categoria' onChange={this.handleChangeCategoria} placeholder="Seleccione la categoria" />
+                                    <Select className={this.state.valid.categoria === true ? 'invalid-select2 is-invalid' : ''} options={datacategorias} isMulti name='categoria' defaultValue={this.categoriasProducto(editProducto.categoria)} onChange={this.handleChangeEditCategoria} placeholder="Seleccione la categoria" />
                                     <FormText>
                                         Categoria del producto.
                                     </FormText>
                                     <FormFeedback>
-                                        Complete inventarioel campo
+                                        {this.state.valid.categoria === true ?
+
+                                            this.state.mensaje.categoria
+
+                                            : ''}
                                     </FormFeedback>
+
+                                    <Label htmlFor='visible'>Visible:</Label>
+                                    <br />
+                                    {editProducto.imagen===null ?
+                                        <Alert color="primary">No se puede regitrar la visibilidad, debe agregar una imagen primero</Alert> :
+                                        <Select options={this.visible} name='visible' defaultValue={editProducto.visible ? { value: true, label: "Visible" } : { value: false, label: "No visible" }} onChange={this.handleChangeVisible} placeholder="Seleccione la categoria" />
+                                    }
+
                                     <br />
                                     <button className='btn btn-primary' onClick={() => { this.setState({ categoria: null }); this.modalInsertarCategoria() }}>
                                         Agregar Categoría
@@ -510,9 +700,9 @@ export default class Producto extends Component {
                     </ModalBody>
 
                     <ModalFooter>
-                        <button className='btn btn-primary' onClick={() => this.peticionPutProducto()}>
+                        <Button disabled={this.state.button} color='primary' onClick={() => this.peticionPutProducto()}>
                             Editar
-                        </button>
+                        </Button>
 
                         <button className='btn btn-danger' onClick={() => this.modalEditarProducto()}>
                             Cancelar
@@ -560,7 +750,7 @@ export default class Producto extends Component {
                                                     editProducto.categoria.map((categoria, index) => {
                                                         return (
                                                             <ListGroupItem key={index}>
-                                                                <p >{categoria}</p>
+                                                                <p >{categoria.nombre}</p>
                                                             </ListGroupItem>
                                                         )
                                                     }) :
@@ -602,12 +792,12 @@ export default class Producto extends Component {
                             <Row>
                                 <Col md={12}>
                                     <Label htmlFor='nombre'>Nombre:</Label>
-                                    <Input invalid type='text' name='nombre' id='nombre' onChange={this.handleChangeInsertarCategoria} />
+                                    <Input valid={this.state.validCategoria.nombre == null ? false : !this.state.validCategoria.nombre} invalid={this.state.validCategoria.nombre} type='text' name='nombre' id='nombre' onChange={this.handleChangeInsertarCategoria} />
                                     <FormText>
                                         Nombre del producto.
                                     </FormText>
                                     <FormFeedback>
-                                        Complete el campo
+                                        {this.state.mensajeCategoria.nombre}
                                     </FormFeedback>
                                 </Col>
                             </Row>
@@ -615,9 +805,9 @@ export default class Producto extends Component {
                     </ModalBody>
 
                     <ModalFooter>
-                        <button className='btn btn-primary' onClick={() => this.peticionPostCategoria()}>
+                        <Button disabled={this.state.buttonCategoria} color='primary' onClick={() => this.peticionPostCategoria()}>
                             Insertar
-                        </button>
+                        </Button>
                         <button className='btn btn-danger' onClick={() => { this.modalInsertarCategoria(); }}>
                             Cancelar
                         </button>
@@ -632,7 +822,4 @@ export default class Producto extends Component {
 
 }
 
-
-
-    //-------------------------------- CAtegoria -----------------------------------------//
 

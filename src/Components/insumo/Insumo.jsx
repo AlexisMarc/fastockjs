@@ -2,14 +2,13 @@ import React, { Component, } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { InputText } from 'primereact/inputtext';
-import { FileUpload } from 'primereact/fileupload';
 import { FilterMatchMode } from 'primereact/api';
 import axios from 'axios';
-import { MultiSelect } from 'primereact/multiselect';
 import Select from 'react-select'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClose, faEdit, faEye, faPlus, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
-import { Alert, Badge, Button, Col, Collapse, Dropdown, FormFeedback, FormGroup, FormText, Input, Label, ListGroup, ListGroupItem, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
+import Validacion from '../../Utils/Validacion';
+import { Alert, Badge, Button, Col, FormFeedback, FormGroup, FormText, Input, Label, ListGroup, ListGroupItem, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 import { autorizacion, baseUrl, autorizacionFiles } from '../../Utils/Api';
 import swal from 'sweetalert';
 
@@ -23,201 +22,11 @@ import 'primeflex/primeflex.css';
 const url = baseUrl + 'insumo/';
 
 export default class Insumo extends Component {
+
+    validacion = new Validacion();
+
     //DATOS 
     state = {}
-
-    //PETICION GET
-    peticionGetInsumo = () => {
-        axios.get(url, autorizacion).then(response => {
-            this.setState({ data: response.data, loading: false });
-        }).catch(error => {
-            console.log(error.message);
-        })
-    }
-
-    //PETICIÓN GET TIPOS
-    peticionGetTipo = () => {
-        axios.get(url + 'tipo/', autorizacion).then(response => {
-            const datos = [];
-
-            response.data.map((Tipo) => {
-                const dato = { value: Tipo.id, label: Tipo.nombre }
-                datos.push(dato);
-            })
-
-            this.setState({ dataTipos: datos });
-        }).catch(error => {
-            console.log(error.message);
-            swal({ title: "ERROR AL CONSULTAR TIPOS", text: " ", icon: "error", buttons: false, timer: 1500 })
-        })
-    }
-
-    //PETICION POST
-    peticionPostInsumo = async () => {
-        var img = null;
-        if (this.state.files != null) {
-            var bodyFormData = new FormData();
-            bodyFormData.append('files', this.state.files);
-            await axios.post(baseUrl + "files/upload", bodyFormData, autorizacionFiles).then(response => {
-                img = response.data.message;
-            }).catch(error => {
-                console.log(error.message);
-            })
-        }
-        this.state.Insumo.imagen = img;
-
-        await axios.post(url, this.state.Insumo, autorizacion).then(response => {
-            this.modalInsertarInsumo();
-            this.peticionGetInsumo();
-
-        }).catch(error => {
-            console.log(error.message);
-        })
-
-    }
-
-    //PETICION POST TIPO
-    peticionPostTipo = async () => {
-
-        await axios.post(url + "tipo", this.state.Tipo, autorizacion).then(response => {
-            this.modalInsertarTipo();
-            this.peticionGetTipo();
-
-        }).catch(error => {
-            console.log(error.message);
-        })
-
-    }
-    //PETICION PUT
-    peticionPutInsumo = () => {
-        axios.put(url + this.state.editInsumo.id, this.state.editInsumo, autorizacion).then(response => {
-            this.modalInsertarInsumo();
-            this.peticionGetInsumo();
-
-            swal("Good job!", "You clicked the button!", "success");
-        })
-    }
-
-    //PETICIÓN ESTADO
-    peticionEstadoInsumo = (Insumo) => {
-        axios.put(url + 'estado/' + Insumo.id, this.state.editInsumo, autorizacion).then(response => {
-            this.peticionGetInsumo();
-            swal("Good job!", "You clicked the button!", "success");
-        }).catch(error => {
-            console.log(error.message);
-            swal("ERROR AL ELIMINAR", 'errores', "error");
-        })
-    }
-
-    //MODAL DE INSERTAR
-    modalInsertarInsumo = () => {
-        this.setState({ modalInsertarInsumo: !this.state.modalInsertarInsumo });
-    }
-
-    //MODAL DE INSERTAR Tipo
-    modalInsertarTipo = () => {
-        this.setState({ modalInsertarTipo: !this.state.modalInsertarTipo });
-    }
-
-    //MODAL DE EDITAR
-    modalEditarInsumo = () => {
-        this.setState({ modalEditarInsumo: !this.state.modalEditarInsumo });
-    }
-
-    //MODAL DE VIEW
-    modalViewInsumo = () => {
-        this.setState({ modalViewInsumo: !this.state.modalViewInsumo });
-    }
-
-    //SELECCIONAR Insumo PARA EDICIÓN
-    seleccionarInsumo = (Insumo) => {
-        this.setState({
-            editInsumo: {
-                id: Insumo.id,
-                nombre: Insumo.nombre,
-                descripcion: Insumo.descripcion,
-                inventario: Insumo.inventario,
-                imagen: Insumo.imagen,
-                Tipo: Insumo.Tipo,
-                estado: Insumo.estado
-
-            }
-        })
-    }
-
-    //PASAR Tipo
-    pasarTipo = (Tipo) => {
-        this.setState({
-            datosTipo: {
-                nombre: Tipo.nombre,
-                filtro: Tipo.filtro
-            }
-        })
-    }
-
-    //INGRESO DE DATOS AL FORM
-    handleChangeInsumo = async e => {
-        e.persist();
-        await this.setState({
-            Insumo: {
-                ...this.state.Insumo,
-                [e.target.name]: e.target.value
-            }
-        });
-        console.log(this.state.Insumo);
-    }
-    //INGRESO DE FILES
-    handleChangeFiles = (e) => {
-        this.setState({
-            files: e.target.files[0],
-        })
-    }
-
-    //INGRESO DE DATOS DE Tipo AL Insumo
-    handleChangeTipo = async (e) => {
-
-        const lista = []
-        e.map((e) => { lista.push(e.value) });
-
-        await this.setState({
-            Insumo: {
-                ...this.state.Insumo,
-                Tipo: lista
-            }
-        });
-
-        console.log(this.state.Insumo);
-    }
-
-    //INGRESO DE DATOS DE Tipo 
-    handleChangeInsertarTipo = async (e) => {
-        e.persist();
-        await this.setState({
-            Tipo: {
-                ...this.state.Tipo,
-                [e.target.name]: e.target.value
-            }
-        });
-        console.log(this.state.Tipo);
-    }
-
-    //INGRESO DE DATOS AL EDITInsumo
-    handleChangeInsumoEditInsumo = async e => {
-        e.persist();
-        await this.setState({
-            editInsumo: {
-                ...this.state.editInsumo,
-                [e.target.name]: e.target.value
-            }
-        });
-        console.log(this.state.editInsumo);
-    }
-
-    //FUNCION DE ARRANQUE
-    componentDidMount() {
-        this.peticionGetInsumo();
-        this.peticionGetTipo();
-    };
 
     //CONSTRUCTOR
     constructor(props) {
@@ -231,23 +40,44 @@ export default class Insumo extends Component {
             modalEditarInsumo: false,
             modalInsertarTipo: false,
             modalViewInsumo: false,
-            Insumo: {
+            insumo: {
                 nombre: '',
-                descripcion: '',
+                material: '',
+                proveedor: null,
                 imagen: null,
-                Tipo: []
+                tipo: []
             },
             editInsumo: {
                 id: '',
                 nombre: '',
-                descripcion: '',
+                material: '',
                 imagen: null,
-                Tipo: [],
+                tipo: [],
                 estado: '',
+                proveedor: '',
+                idProveedor: '',
                 inventario: null,
-                visible: ''
             },
-            Tipo: {
+            valid: {
+                nombre: null,
+                material: null,
+                tipo: null,
+            },
+            validTipo: {
+                nombre: null,
+            },
+            mensaje: {
+                nombre: null,
+                material: null,
+                tipo: null
+            },
+            mensajeTipo: {
+                nombre: null,
+                tipo: null,
+            },
+            button: true,
+            buttonTipo: true,
+            tipo: {
                 id: '',
                 nombre: ''
             },
@@ -270,7 +100,345 @@ export default class Insumo extends Component {
         this.itemTemplate = this.itemTemplate.bind(this);
     }
 
+    //PETICION GET
+    peticionGetInsumo = () => {
+        axios.get(url, autorizacion).then(response => {
+            this.setState({ data: response.data, loading: false });
+        }).catch(error => {
+            console.log(error.message);
+            this.setState({ loading: false });
+            swal({ title: "ERROR AL CONSULTAR", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+    }
 
+    //PETICIÓN GET Tipo
+    peticionGetTipo = () => {
+        axios.get(url + 'tipo/', autorizacion).then(response => {
+            const datos = [];
+
+            response.data.forEach((Tipo) => {
+                const dato = { value: Tipo.id, label: Tipo.nombre }
+                datos.push(dato);
+            })
+
+            this.setState({ dataTipos: datos });
+        }).catch(error => {
+            console.log(error.message);
+            swal({ title: "ERROR AL CONSULTAR TIPOS", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+    }
+
+    //CONVERTIR TIPOS DEL INSUMO
+    TiposInsumo = (e) => {
+        const datos = [];
+        e.forEach((Tipo) => {
+            datos.push({ value: Tipo.id, label: Tipo.nombre });
+        });
+        return datos;
+    }
+
+    //PETICION POST
+    peticionPostInsumo = async () => {
+        var img = null;
+        if (this.state.files != null) {
+            var bodyFormData = new FormData();
+            bodyFormData.append('files', this.state.files);
+            await axios.post(baseUrl + "files/upload", bodyFormData, autorizacionFiles).then(response => {
+                img = response.data.message;
+            }).catch(error => {
+                console.log(error.message);
+            })
+        }
+        this.state.insumo.imagen = img;
+
+        await axios.post(url, this.state.insumo, autorizacion).then(response => {
+            this.modalInsertarInsumo();
+            this.peticionGetInsumo();
+            swal({ title: "Insumo " + response.data.nombre + " registrado", text: " ", icon: "success", buttons: false, timer: 1500 })
+
+        }).catch(error => {
+            console.log(error.message);
+            swal({ title: "ERROR AL REGISTRAR", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+
+    }
+
+    //PETICION POST Tipo
+    peticionPostTipo = async () => {
+
+        await axios.post(url + "tipo", this.state.tipo, autorizacion).then(response => {
+            this.modalInsertarTipo();
+            this.peticionGetTipo();
+            swal({ title: "Tipo " + response.data.nombre + " registrado", text: " ", icon: "success", buttons: false, timer: 1500 })
+        }).catch(error => {
+            console.log(error.message);
+            swal({ title: "ERROR AL REGISTRAR TIPO", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+
+    }
+
+    //PETICION PUT
+    peticionPutInsumo = async () => {
+        var img = this.state.editInsumo.imagen;
+        if (this.state.files != null) {
+            var bodyFormData = new FormData();
+            bodyFormData.append('files', this.state.files);
+            await axios.post(baseUrl + "files/upload", bodyFormData, autorizacionFiles).then(response => {
+                img = response.data.message;
+            }).catch(error => {
+                console.log(error.message);
+            })
+        }
+        this.state.editInsumo.imagen = img;
+        const lista = [];
+        this.state.editInsumo.tipo.forEach((e) => {
+            if (e.id != null) {
+                lista.push(e.id)
+            } else {
+                lista.push(e)
+            }
+        });
+        this.state.editInsumo.Tipo = lista;
+
+        delete this.state.editInsumo.inventario;
+        console.log(this.state.editInsumo)
+        await axios.put(url + this.state.editInsumo.id, this.state.editInsumo, autorizacion).then(response => {
+            this.peticionGetInsumo();
+            this.modalEditarInsumo();
+
+            swal({ title: "Insumo " + response.data.nombre + " editado", text: " ", icon: "success", buttons: false, timer: 1500 })
+        }).catch(error => {
+            console.log(error.message);
+            swal({ title: "ERROR AL EDITAR", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+    }
+
+    //PETICIÓN ESTADO
+    peticionEstadoInsumo = (insumo) => {
+        axios.put(url + 'estado/' + insumo.id, this.state.editInsumo, autorizacion).then(response => {
+            this.peticionGetInsumo();
+            swal({ title: "Insumo " + response.data.nombre + " eliminado", text: " ", icon: "success", buttons: false, timer: 1500 })
+        }).catch(error => {
+            console.log(error.message);
+            swal({ title: "ERROR AL ELIMINAR", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+    }
+
+    //CAMBIO DE VALIDACIONES
+    validFalse = () => {
+        this.setState({
+            button: true, valid: {
+                nombre: null,
+                tipo: null,
+            }
+        });
+    }
+    //MODAL DE INSERTAR
+    modalInsertarInsumo = () => {
+        this.setState({ modalInsertarInsumo: !this.state.modalInsertarInsumo });
+        this.validFalse();
+    }
+
+    //MODAL DE INSERTAR TIPO
+    modalInsertarTipo = () => {
+        this.setState({ modalInsertarTipo: !this.state.modalInsertarTipo });
+    }
+
+    //MODAL DE EDITAR
+    modalEditarInsumo = () => {
+        this.setState({
+            modalEditarInsumo: !this.state.modalEditarInsumo, files: null,
+            valid: {
+                nombre: false,
+                tipo: false,
+            },
+            button: true,
+        });
+    }
+
+    //MODAL DE VIEW
+    modalViewInsumo = () => {
+        this.setState({ modalViewInsumo: !this.state.modalViewInsumo });
+    }
+
+    //SELECCIONAR INSUMO PARA EDICIÓN
+    seleccionarInsumo = (insumo) => {
+        console.log(insumo)
+        this.setState({
+            editInsumo: {
+                id: insumo.id,
+                nombre: insumo.nombre,
+                material: insumo.material,
+                inventario: insumo.inventario,
+                imagen: insumo.imagen,
+                tipo: insumo.tipo,
+                estado: insumo.estado,
+                proveedor: insumo.proveedor,
+                idProveedor: insumo.idProveedor,
+
+            }
+        })
+    }
+
+    //PASAR Tipo
+    pasarTipo = (Tipo) => {
+        this.setState({
+            datosTipo: {
+                nombre: Tipo.nombre,
+                filtro: Tipo.filtro
+            }
+        })
+    }
+
+    //INGRESO DE DATOS AL FORM
+    handleChangeInsumo = async e => {
+        e.persist();
+        const valid = this.validacion.valid(e.target.name, e.target.value);
+        const mensaje = this.validacion.mensaje(e.target.name, e.target.value);
+        await this.setState({
+            insumo: {
+                ...this.state.insumo,
+                [e.target.name]: e.target.value
+            },
+            valid: {
+                ...this.state.valid,
+                [e.target.name]: valid,
+            },
+            mensaje: {
+                ...this.state.mensaje,
+                [e.target.name]: mensaje,
+            }
+        });
+        this.ValidButton();
+        console.log(this.state.insumo);
+    }
+
+    //BOTON DESABILITADO DE REGISTRAR
+    ValidButton = () => {
+        delete this.state.valid.descripcion;
+        delete this.state.valid.imagen;
+        this.setState({
+            button: this.validacion.ValidButton(this.state.valid),
+        });
+    }
+    //BOTON DESABILITADO DE REGISTRAR
+    ValidButtonTipo = () => {
+        this.setState({
+            buttonTipo: this.validacion.ValidButton(this.state.validTipo),
+        });
+    }
+    //INGRESO DE FILES
+    handleChangeFiles = (e) => {
+        this.setState({
+            files: e.target.files[0],
+        })
+    }
+
+    //INGRESO DE DATOS DE TIPOS AL INSUMO
+    handleChangeTipo = async (e) => {
+
+        const lista = []
+        e.forEach((e) => { lista.push(e.value) });
+        const valid = this.validacion.valid("tipo", e);
+        const mensaje = this.validacion.mensaje("tipo", e);
+        console.log(valid)
+        await this.setState({
+            insumo: {
+                ...this.state.insumo,
+                tipo: lista
+            },
+            valid: {
+                ...this.state.valid,
+                tipo: valid,
+            },
+            mensaje: {
+                ...this.state.mensaje,
+                tipo: mensaje,
+            }
+        });
+        this.ValidButton();
+
+        console.log(this.state.insumo);
+    }
+    //INGRESO DE DATOS DE TIPO AL EDITINSUMO
+    handleChangeEditTipo = async (e) => {
+
+        const lista = []
+        const valid = this.validacion.valid("tipo", e);
+        const mensaje = this.validacion.mensaje("tipo", e);
+        e.forEach((e) => { lista.push(e.value) });
+        console.log(lista)
+        await this.setState({
+            insumo: {
+                ...this.state.insumo,
+                tipo: lista
+            },
+            valid: {
+                ...this.state.valid,
+                tipo: valid,
+            },
+            mensaje: {
+                ...this.state.mensaje,
+                tipo: mensaje,
+            }
+        });
+        this.ValidButton();
+
+        console.log(this.state.editInsumo);
+    }
+
+    //INGRESO DE DATOS DE Tipo 
+    handleChangeInsertarTipo = async (e) => {
+        e.persist();
+        const valid = this.validacion.valid(e.target.name, e.target.value);
+        const mensaje = this.validacion.mensaje(e.target.name, e.target.value);
+        await this.setState({
+            tipo: {
+                ...this.state.tipo,
+                [e.target.name]: e.target.value
+            },
+            validTipo: {
+                ...this.state.validTipo,
+                [e.target.name]: valid,
+            },
+            mensajeTipo: {
+                ...this.state.mensajeTipo,
+                [e.target.name]: mensaje,
+            },
+        });
+        this.ValidButtonTipo();
+
+        console.log(this.state.tipo);
+    }
+
+    //INGRESO DE DATOS AL EDITINSUMO
+    handleChangeInsumoEditInsumo = async e => {
+        e.persist();
+        const valid = this.validacion.valid(e.target.name, e.target.value);
+        const mensaje = this.validacion.mensaje(e.target.name, e.target.value);
+        await this.setState({
+            editInsumo: {
+                ...this.state.editInsumo,
+                [e.target.name]: e.target.value
+            },
+            valid: {
+                ...this.state.valid,
+                [e.target.name]: valid,
+            },
+            mensaje: {
+                ...this.state.mensaje,
+                [e.target.name]: mensaje,
+            }
+        });
+        this.ValidButton();
+        console.log(this.state.editInsumo);
+    }
+
+    //FUNCION DE ARRANQUE
+    componentDidMount() {
+        this.peticionGetInsumo();
+        this.peticionGetTipo();
+    };
 
 
     //RENDERIZAR IMAGEN
@@ -318,13 +486,15 @@ export default class Insumo extends Component {
     //RENDERIZAR ENCABEZADO DE LA DATATABLE
     renderHeaderInsumo() {
         return (
-            <div className="flex justify-content-between align-items-center">
-                <h5 className="m-0 h5"></h5>
-                <span className="p-input-icon-left">
-                    <i className="pi pi-search" />
-                    <InputText value={this.state.globalFilterValue} onChange={this.onGlobalFilterChangeInsumo} placeholder="Buscar" />
-                </span>
-            </div>
+            <React.Fragment>
+                <div className="flex justify-content-between align-items-center">
+                    <h5 className="m-0 h5"> </h5>
+                    <span className="p-input-icon-left">
+                        <i className="pi pi-search" />
+                        <InputText value={this.state.globalFilterValue} onChange={this.onGlobalFilterChangeInsumo} placeholder="Buscar" />
+                    </span>
+                </div>
+            </React.Fragment>
         )
     }
     //EVENTOS DE SUBIR ARCHIVO
@@ -348,6 +518,7 @@ export default class Insumo extends Component {
     }
     //ARCHIVO
     imageHandler = (e) => {
+        this.setState({ button: false, editInsumo: { ...this.state.editInsumo, imagen: null, } });
         this.handleChangeFiles(e);
         const reader = new FileReader();
         reader.onload = () => {
@@ -365,15 +536,11 @@ export default class Insumo extends Component {
         const toggle2 = () => this.modalEditarInsumo();
         const toggle3 = () => this.modalViewInsumo();
         const toggle4 = () => this.modalInsertarTipo();
-        const chooseOptions = { icon: 'pi pi-fw pi-images', iconOnly: true, className: 'btn-primary' };
-        const uploadOptions = { icon: 'pi pi-fw pi-cloud-upload', iconOnly: true, className: 'custom-upload-btn p-button-success p-button-rounded p-button-outlined' };
-        const cancelOptions = { icon: 'pi pi-fw pi-times', iconOnly: true, className: 'btn-danger' };
-
         return (
             <div className="datatable-doc-demo">
                 <div className="flex justify-content-between align-items-center">
                     <h5 className="m-0 h5">Insumo</h5>
-                    <button className='btn btn-primary' onClick={() => { this.setState({ Insumo: {}, files: null , profileImg: this.state.img }); this.modalInsertarInsumo() }} ><FontAwesomeIcon icon={faPlus} style={{ "marginRight": "1rem" }} /><span className='menu-title'>Agregar</span></button>
+                    <button className='btn btn-primary' onClick={() => { this.setState({ insumo: {}, files: null, profileImg: this.state.img }); this.modalInsertarInsumo() }} ><FontAwesomeIcon icon={faPlus} style={{ "marginRight": "1rem" }} /><span className='menu-title'>Agregar</span></button>
                 </div>
                 <br />
                 <div className='card'>
@@ -416,30 +583,37 @@ export default class Insumo extends Component {
                                 </Col>
                                 <Col md={6}>
                                     <Label htmlFor='nombre'>Nombre:</Label>
-                                    <Input invalid type='text' name='nombre' id='nombre' onChange={this.handleChangeInsumo} />
+                                    <Input valid={this.state.valid.nombre == null ? false : !this.state.valid.nombre} invalid={this.state.valid.nombre} type='text' name='nombre' id='nombre' onChange={this.handleChangeInsumo} />
                                     <FormText>
                                         Nombre del Insumo.
                                     </FormText>
                                     <FormFeedback>
-                                        Complete el campo
+                                        {this.state.mensaje.nombre}
                                     </FormFeedback>
-                                    <Label htmlFor='descripcion'>Descripción:</Label>
-                                    <Input type='textarea' name='descripcion' id='descripcion' onChange={this.handleChangeInsumo} />
+                                    <Label htmlFor='material'>Material:</Label>
+                                    <Input valid={this.state.valid.material == null ? false : !this.state.valid.material} invalid={this.state.valid.material} type='text' name='material' id='material' onChange={this.handleChangeInsumo} />
                                     <FormText>
                                         Descripción del Insumo.
                                     </FormText>
+                                    <FormFeedback>
+                                        {this.state.mensaje.material}
+                                    </FormFeedback>
                                     <Label htmlFor='Tipo'>Tipo:</Label>
                                     <br />
-                                    <Select options={dataTipos} isMulti name='Tipo' onChange={this.handleChangeTipo} placeholder="Seleccione la Tipo" />
+                                    <Select className={this.state.valid.tipo === true ? 'invalid-select2 is-invalid' : ''} options={dataTipos} isMulti name='tipo' onChange={this.handleChangeTipo} placeholder="Seleccione los tipos" />
                                     <FormText>
                                         Tipo del Insumo.
                                     </FormText>
                                     <FormFeedback>
-                                        Complete inventarioel campo
+                                        {this.state.valid.tipo === true ?
+
+                                            this.state.mensaje.tipo
+
+                                            : ''}
                                     </FormFeedback>
                                     <br />
-                                    <button className='btn btn-primary' onClick={() => { this.setState({ Tipo: null }); this.modalInsertarTipo() }}>
-                                        Agregar Tipo
+                                    <button className='btn btn-primary' onClick={() => { this.setState({ tipo: null }); this.modalInsertarTipo() }}>
+                                        Agregar Categoría
                                     </button>
                                 </Col>
                             </Row>
@@ -447,9 +621,9 @@ export default class Insumo extends Component {
                     </ModalBody>
 
                     <ModalFooter>
-                        <button className='btn btn-primary' onClick={() => this.peticionPostInsumo()}>
+                        <Button disabled={this.state.button} color='primary' onClick={() => this.peticionPostInsumo()}>
                             Insertar
-                        </button>
+                        </Button>
                         <button className='btn btn-danger' onClick={() => { this.setState({ profileImg: this.state.img }); this.modalInsertarInsumo(); }}>
                             Cancelar
                         </button>
@@ -457,29 +631,66 @@ export default class Insumo extends Component {
                 </Modal>
 
                 {/* MODAL DE EDITAR */}
-                <Modal isOpen={this.state.modalEditarInsumo} toggle={toggle2} size='lg'>
-                    <ModalHeader>
-                        <span >Editar Insumo</span>
-                    </ModalHeader>
 
+                <Modal isOpen={this.state.modalEditarInsumo} toggle={() => { toggle2(); this.setState({ profileImg: this.state.img }) }} size='lg'>
+                    <ModalHeader>
+                        <span>Agregar Insumo</span>
+                        <button type="button" className="close" onClick={() => { this.setState({ profileImg: this.state.img }); this.modalEditarInsumo(); }}>
+                            <FontAwesomeIcon icon={faClose} />
+                        </button>
+                    </ModalHeader>
                     <ModalBody>
-                        <div className="form-group"><br />
-                            <label htmlFor="nombre">Nombre</label>
-                            <input className="form-control" type="text" name='nombre' id='nombre' onChange={this.handleChangeInsumo} value={editInsumo.nombre || ''} />
-                            <div />
-                            <label htmlFor='descripcion'>Descripción</label>
-                            <input className='form-control' type='text' name='descripcion' id='descripcion' onChange={this.handleChangeEditInsumo} value={editInsumo.descripcion || ''} />
-                            <label htmlFor='imagen'>Imagen</label>
-                            <input className='form-control' name='imagen' id='imagen' onChange={this.handleChangeEditInsumo} value={editInsumo.imagen || ''} />
-                            <label htmlFor='Tipo'>Tipo</label>
-                            <input className='form-control' name='Tipon' id='Tipo' onChange={this.handleChangeInsumo} value={editInsumo.Tipo || ''} />
-                        </div>
+                        <FormGroup>
+                            <Row>
+                                <Col md={6}>
+                                    <Label htmlFor='imagen'>Imagen:</Label>
+                                    <div className="custom-file">
+                                        <input className='custom-file-input' type="file" name="files" accept="image/*" onChange={this.imageHandler} />
+                                        <label data-browse="Seleccionar" className="custom-file-label" htmlFor="customFile">Seleccionar imagen...</label>
+                                    </div>
+                                    <img src={editInsumo.imagen != null ? baseUrl + "files/" + editInsumo.imagen : profileImg} alt="cargado" style={{ "width": "100%", "borderRadius": "0px 0px 10px 10px", "padding": "20px 20px 0px 20px" }} />
+                                </Col>
+                                <Col md={6}>
+                                    <Label htmlFor='nombre'>Nombre:</Label>
+                                    <Input valid={this.state.valid.nombre == null ? false : !this.state.valid.nombre} invalid={this.state.valid.nombre} type='text' name='nombre' id='nombre' onChange={this.handleChangeInsumoEditInsumo} value={editInsumo.nombre || ''} />
+                                    <FormFeedback>
+                                        {this.state.mensaje.nombre}
+                                    </FormFeedback>
+                                    <FormText>
+                                        Nombre del Insumo.
+                                    </FormText>
+
+                                    <Label htmlFor='descripcion'>Descripción:</Label>
+                                    <Input type='textarea' name='descripcion' id='descripcion' placeholder={editInsumo.descripcion ? '' : "Sin Descripción registrada"} onChange={this.handleChangeInsumoEditInsumo} value={editInsumo.descripcion || ''} />
+                                    <FormText>
+                                        Descripción del Insumo.
+                                    </FormText>
+                                    <Label htmlFor='Tipo'>Tipo:</Label>
+                                    <br />
+                                    <Select className={this.state.valid.tipo === true ? 'invalid-select2 is-invalid' : ''} options={dataTipos} isMulti name='Tipo' defaultValue={this.TiposInsumo(editInsumo.tipo)} onChange={this.handleChangeEditTipo} placeholder="Seleccione los tipos" />
+                                    <FormText>
+                                        Tipo del Insumo.
+                                    </FormText>
+                                    <FormFeedback>
+                                        {this.state.valid.tipo === true ?
+
+                                            this.state.mensaje.tipo
+
+                                            : ''}
+                                    </FormFeedback>
+                                    <br />
+                                    <button className='btn btn-primary' onClick={() => { this.setState({ tipo: null }); this.modalInsertarTipo() }}>
+                                        Agregar Categoría
+                                    </button>
+                                </Col>
+                            </Row>
+                        </FormGroup>
                     </ModalBody>
 
                     <ModalFooter>
-                        <button className='btn btn-primary' onClick={() => this.peticionPostInsumo()}>
-                            Insertar
-                        </button>
+                        <Button disabled={this.state.button} color='primary' onClick={() => this.peticionPutInsumo()}>
+                            Editar
+                        </Button>
 
                         <button className='btn btn-danger' onClick={() => this.modalEditarInsumo()}>
                             Cancelar
@@ -511,29 +722,25 @@ export default class Insumo extends Component {
                                             <p>Nombre:</p> <h5>{editInsumo.nombre}</h5>
                                         </ListGroupItem>
                                         <ListGroupItem>
-                                            <p>Descripción:</p> <h5>{editInsumo.descripcion ? editInsumo.descripcion : <Badge color="secondary">Sin Descripción</Badge>}</h5>
+                                            <p>Proveedor:</p> <h5>{editInsumo.proveedor ? editInsumo.proveedor : <Badge color="secondary">Sin proveedor</Badge>}</h5>
                                         </ListGroupItem>
                                         <ListGroupItem>
                                             <p>Inventario:</p> {!editInsumo.inventario ? <Badge color="primary"> Tiene inventario</Badge> : <Badge color="danger">Sin inventario</Badge>}
                                         </ListGroupItem>
                                         <ListGroupItem>
-                                            <p>Visible:</p> {editInsumo.visible ? <Badge color="primary"> Es visible</Badge> : <Badge color="danger">No visible</Badge>}
-                                        </ListGroupItem>
-
-                                        <ListGroupItem>
                                             <p>Tipo:</p>
                                             <ListGroup>
-                                                {editInsumo.Tipo.length > 0 ?
-                                                    editInsumo.Tipo.map((Tipo, index) => {
+                                                {editInsumo.tipo.length > 0 ?
+                                                    editInsumo.tipo.map((tipo, index) => {
                                                         return (
                                                             <ListGroupItem key={index}>
-                                                                <p >{Tipo}</p>
+                                                                <p >{tipo.nombre}</p>
                                                             </ListGroupItem>
                                                         )
                                                     }) :
 
                                                     <Alert color="primary">
-                                                        No hay Tipos registradas con el Insumo
+                                                        No hay tipos registradas con el Insumo
                                                     </Alert>
                                                 }
                                             </ListGroup>
@@ -555,7 +762,7 @@ export default class Insumo extends Component {
                     </ModalFooter>
                 </Modal>
 
-                {/* MODAL DE Tipo */}
+                {/* MODAL DE TIPO */}
                 <Modal isOpen={this.state.modalInsertarTipo} toggle={toggle4} size="sm" >
                     <ModalHeader>
                         <span>Agregar Tipo</span>
@@ -569,12 +776,12 @@ export default class Insumo extends Component {
                             <Row>
                                 <Col md={12}>
                                     <Label htmlFor='nombre'>Nombre:</Label>
-                                    <Input invalid type='text' name='nombre' id='nombre' onChange={this.handleChangeInsertarTipo} />
+                                    <Input valid={this.state.validTipo.nombre == null ? false : !this.state.validTipo.nombre} invalid={this.state.validTipo.nombre} type='text' name='nombre' id='nombre' onChange={this.handleChangeInsertarTipo} />
                                     <FormText>
                                         Nombre del Insumo.
                                     </FormText>
                                     <FormFeedback>
-                                        Complete el campo
+                                        {this.state.mensajeTipo.nombre}
                                     </FormFeedback>
                                 </Col>
                             </Row>
@@ -582,9 +789,9 @@ export default class Insumo extends Component {
                     </ModalBody>
 
                     <ModalFooter>
-                        <button className='btn btn-primary' onClick={() => this.peticionPostTipo()}>
+                        <Button disabled={this.state.buttonTipo} color='primary' onClick={() => this.peticionPostTipo()}>
                             Insertar
-                        </button>
+                        </Button>
                         <button className='btn btn-danger' onClick={() => { this.modalInsertarTipo(); }}>
                             Cancelar
                         </button>
@@ -599,7 +806,4 @@ export default class Insumo extends Component {
 
 }
 
-
-
-    //-------------------------------- Tipo -----------------------------------------//
 
