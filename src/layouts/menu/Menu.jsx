@@ -48,18 +48,10 @@ function Menu() {
                     </div>
                 </li>
                 <li className="nav-item">
-                    <a className="nav-link" data-toggle="collapse" href="#inventario" aria-expanded="false"
-                        aria-controls="ui-basic">
+                    <Link className="nav-link" to="/inventario">
                         <i className="ti-package menu-icon"></i>
                         <span className="menu-title">Inventario</span>
-                        <i className="menu-arrow"></i>
-                    </a>
-                    <div className="collapse" id="inventario">
-                        <ul className="nav flex-column sub-menu">
-                            <li className="nav-item"><Link to="/inventariopro" className="nav-link">Productos</Link></li>
-                            <li className="nav-item"><Link to="/inventario" className="nav-link">Insumos</Link></li>
-                        </ul>
-                    </div>
+                    </Link>
                 </li>
                 <li className="nav-item">
                     <a className="nav-link" href="/">

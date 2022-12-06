@@ -18,10 +18,10 @@ function Error() {
 
                                 <div className="contant_box_404">
                                     <h1 className="h2">
-                                        Ole pirobo se equivoco
+                                        Upss, Salio algo mal
                                     </h1>
 
-                                    <p>Revise gonorrea aprenda a escribir!</p>
+                                    <p>Sucedio un problema</p>
 
                                     <Link  to="/dashboard" className="link_404">Regresar al Home</Link>
                                 </div>

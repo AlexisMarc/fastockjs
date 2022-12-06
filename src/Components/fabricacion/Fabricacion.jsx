@@ -1,158 +1,430 @@
+import React, { Component, } from 'react';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { Rating } from 'primereact/rating';
+import { InputText } from 'primereact/inputtext';
+import RLDD from "react-list-drag-and-drop/lib/RLDD";
+import { FilterMatchMode } from 'primereact/api';
 import axios from 'axios';
-import React, { Component } from 'react';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
-
+import Select from 'react-select'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { faClose, faEdit, faEye, faGrip, faPlus, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import Validacion from '../../Utils/Validacion';
+import { Alert, Badge, Button, Col, FormFeedback, FormGroup, FormText, Input, Label, ListGroup, ListGroupItem, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
+import { autorizacion, baseUrl, autorizacionFiles } from '../../Utils/Api';
+
+import { Accordion, AccordionTab } from 'primereact/accordion';
+import swal from 'sweetalert';
+import { Toast } from 'primereact/toast';
+
+import 'primeicons/primeicons.css';
+import 'primereact/resources/themes/lara-light-indigo/theme.css';
+import 'primereact/resources/primereact.css';
+import 'primeflex/primeflex.css';
+
+//URL PRINCIPAL
+const url = baseUrl + 'fabricacion/';
 
 
-const url = "http://localhost:8083/api/fabricacion";
+export default class Fabricacion extends Component {
 
-class Fabricacion extends Component {
+  constructor(props) {
+    super(props);
 
-  state = {
-    data: [],
-    modalInsertar: false,
-    form : {
-      id: '',
-      estado: null,
-      fechafinal: '',
-      fechainicio: ''
-    }
+    this.state = {
+      data: [],
+      dataInsumo: [],
+      dataProducto: [],
+      dataUsuario: [],
+      dataCategoria: [],
+      producto: {
+        nombre: '',
+        descripcion: '',
+        imagen: null,
+        categoria: []
+    },
+    fabricacion: {
+      usuario: null,
+      insumo: [],
+      producto: null,
+    },
+    area: {
+      nombre: '',
+      fabricacion: null,
+      tipo: '',
+      idencargado: null,
+      numerador: null,
+    },
+      items: [
+        {
+          id: 1,
+          numerador: null,
+          nombre: 'Diseño',
+          tipo: '',
+          idencargado: null,
+        },
+        {
+          id: 2,
+          numerador: null,
+          nombre: 'Costura',
+          tipo: '',
+          idencargado: null,
+        },
+        {
+          id: 3,
+          numerador: null,
+          nombre: 'Lavado',
+          tipo: '',
+          idencargado: null,
+        },
+        {
+          id: 4,
+          numerador: null,
+          nombre: 'Control de calidad',
+          tipo: '',
+          idencargado: null,
+        },
+      ],
+      data: [],
+      expandedRows: null,
+      modalInsertarFabricacion: false,
+      colors: ['PHP', 'MYSQL', 'REACT', 'LARAVEL'],
+    };
+    this.navList = this.nav.bind(this);
+    this.handleRLDDChange = this.handleRLDDChange.bind(this);
+    this.amountBodyTemplate = this.amountBodyTemplate.bind(this);
+    this.rowExpansionTemplate = this.rowExpansionTemplate.bind(this);
+    this.searchBodyTemplate = this.searchBodyTemplate.bind(this);
+    this.imageBodyTemplate = this.imageBodyTemplate.bind(this);
+    this.priceBodyTemplate = this.priceBodyTemplate.bind(this);
+    this.ratingBodyTemplate = this.ratingBodyTemplate.bind(this);
+    this.statusBodyTemplate = this.statusBodyTemplate.bind(this);
+    this.statusOrderBodyTemplate = this.statusOrderBodyTemplate.bind(this);
+    this.onRowExpand = this.onRowExpand.bind(this);
+    this.onRowCollapse = this.onRowCollapse.bind(this);
+    this.expandAll = this.expandAll.bind(this);
+    this.collapseAll = this.collapseAll.bind(this);
   }
 
-  modalInsertar = ()=>{
-    this.setState({modalInsertar : !this.state.modalInsertar})
-  }
+  //PETICION GET
+  peticionGet = () => {
+    axios.get(baseUrl + "producto/", autorizacion).then(response => {
+      const datos = [];
+      response.data.forEach((i) => {
+        const dato = { value: i.id, label: i.nombre }
+        datos.push(dato);
 
-  peticionPut = () => {
-    axios.put(url + this.state.form.id, this.state.form).then(response => {
-        this.modalInsertar();
-        this.peticionGet();
-    })
-}
-
-peticionPost = async () => {
-
-  delete this.state.form.id;
-  await axios.post(url, this.state.form).then(response => {
-      this.modalInsertar();
-      this.peticionGet();
-
-  }).catch(error => {
+      })
+      this.setState({ dataProducto: datos, });
+    }).catch(error => {
       console.log(error.message);
-  })
-
-}
-
-  seleccionarFabricacion = (fabricacion) => {
-    this.setState({
-        tipoModal: 'actualizar',
-        form: {
-            id: fabricacion.id,
-            esatdo: fabricacion.estado,
-            fechainicio: fabricacion.fechainicio,
-            fechafinal: fabricacion.fechafinal,
-            identificacion: fabricacion.identificacion
-        }
+      this.setState({ loading: false });
+      swal({ title: "ERROR AL CONSULTAR PRODUCTO", text: " ", icon: "error", buttons: false, timer: 1500 })
     })
-}
+    axios.get(baseUrl + "insumo", autorizacion).then(response => {
+      const datos = [];
+      response.data.forEach((i) => {
+        const dato = { value: i.id, label: i.nombre }
+        datos.push(dato);
 
-  handleChange = async e =>{
-    e.persist();
-    await this.setState({
-      form:{
-        ...this.state.form,
-        [e.target.name]: e.target.value
-      }
+      })
+      this.setState({ dataInsumo: datos, });
+    }).catch(error => {
+      console.log(error.message);
+      this.setState({ loading: false });
+      swal({ title: "ERROR AL CONSULTAR INSUMO", text: " ", icon: "error", buttons: false, timer: 1500 })
     })
-    console.log(this.state.form)
+
+    axios.get(baseUrl + "fabricacion", autorizacion).then(response => {
+      this.setState({ data: response.data, loading: false });
+    }).catch(error => {
+      console.log(error.message);
+      this.setState({ loading: false });
+      swal({ title: "ERROR AL CONSULTAR FABRICACION", text: " ", icon: "error", buttons: false, timer: 1500 })
+    })
+    axios.get(baseUrl + "usuario", autorizacion).then(response => {
+      const datos = [];
+      response.data.forEach((i) => {
+        const dato = { value: i.id, label: i.nombre + ' ' + i.apellido }
+        datos.push(dato);
+        ;
+      })
+      this.setState({ dataUsuario: datos, })
+    }).catch(error => {
+      console.log(error.message);
+      this.setState({ loading: false });
+      swal({ title: "ERROR AL CONSULTAR USUARIO", text: " ", icon: "error", buttons: false, timer: 1500 })
+    })
+    axios.get(baseUrl + 'producto/categoria/', autorizacion).then(response => {
+      const datos = [];
+
+      response.data.forEach((categoria) => {
+        const dato = { value: categoria.id, label: categoria.nombre }
+        datos.push(dato);
+      })
+
+      this.setState({ dataCategoria: datos });
+    }).catch(error => {
+      console.log(error.message);
+      swal({ title: "ERROR AL CONSULTAR CATEGORIAS", text: " ", icon: "error", buttons: false, timer: 1500 })
+    })
   }
-  
-  peticionGet = () => (
-    axios.get(url).then(response => {
-      this.setState({ data: response.data });
-    })
 
-  )
+
+  //MODAL DE INSERTAR
+  modalInsertarFabricacion = () => {
+    this.setState({ modalInsertarFabricacion: !this.state.modalInsertarFabricacion });
+  }
 
   componentDidMount() {
     this.peticionGet();
   }
 
-  render() {
-    const { form } = this.state;
+  onRowExpand(event) {
+    this.toast.show({ severity: 'info', summary: 'Product Expanded', detail: event.data.name, life: 3000 });
+  }
+
+  onRowCollapse(event) {
+    this.toast.show({ severity: 'success', summary: 'Product Collapsed', detail: event.data.name, life: 3000 });
+  }
+
+  expandAll() {
+    let expandedRows = {};
+    this.state.data.forEach(p => expandedRows[`${p.id}`] = true);
+
+    this.setState({
+      expandedRows
+    }, () => {
+      this.toast.show({ severity: 'success', summary: 'All Rows Expanded', life: 3000 });
+    });
+  }
+
+  collapseAll() {
+    this.setState({
+      expandedRows: null
+    }, () => {
+      this.toast.show({ severity: 'success', summary: 'All Rows Collapsed', life: 3000 });
+    });
+  }
+
+  formatCurrency(value) {
+    return null;
+  }
+
+  amountBodyTemplate(rowData) {
+    return this.formatCurrency(rowData.amount);
+  }
+
+  statusOrderBodyTemplate(rowData) {
+    return <span className={`order-badge order-${rowData.status.toLowerCase()}`}>{rowData.status}</span>;
+  }
+
+  searchBodyTemplate() {
+    return <Button icon="pi pi-search" />;
+  }
+
+  imageBodyTemplate(rowData) {
+    return <img src={`images/product/${rowData.image}`} onError={(e) => e.target.src = 'https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png'} alt={rowData.image} className="product-image" />;
+  }
+
+  priceBodyTemplate(rowData) {
+    return this.formatCurrency(rowData.price);
+  }
+
+  ratingBodyTemplate(rowData) {
+    return <Rating value={rowData.rating} readOnly cancel={false} />;
+  }
+
+  statusBodyTemplate(rowData) {
+    return null;
+  }
+
+  allowExpansion(rowData) {
+    return rowData.area.length > 0;
+  };
+
+  rowExpansionTemplate(data) {
     return (
-      <div className="Fabricacion" >
-        <br />
-        <button className='btn btn-primary' onClick={() => { this.setState({ form: null, tipoModal: 'insertar' }); this.modalInsertar() }}>Agregar Fabricacion</button>
-        <br />
-        <br />
-        <table className='table'>
-          <thead>
-            <tr>
-              <th>Id</th>
-              <th>Estado</th>
-              <th>Fecha de inicio</th>
-              <th>Fecha final</th>
-            </tr>
-          </thead>
-          <tbody>
-            {this.state.data.map(fabricacion => {
-              return (
-                <tr>
-                  <td>{fabricacion.id}</td>
-                  <td>{fabricacion.estado}</td>
-                  <td>{fabricacion.fechafinal}</td>
-                  <td>{fabricacion.fechafinal}</td>
-                  <td>
-                  <button className='btn btn-primary' onClick={() => { this.seleccionarFabricacion(fabricacion); this.modalInsertar() }}><FontAwesomeIcon icon={faEdit} /></button>
-                    {" "}
-                    <button className='btn btn-danger'>Eliminar</button>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
+      <div className="orders-subtable">
+        <h5>Areas</h5>
+        <DataTable value={data.area} responsiveLayout="scroll">
+          <Column field="id" header="Id" sortable></Column>
+          <Column field="nombre" header="Nombre" sortable></Column>
+          <Column field="fechainicio" header="Fecha de Inicio" sortable></Column>
+        </DataTable>
+      </div>
+    );
+  }
 
-          <Modal isOpen={this.state.modalInsertar}>
-                <ModalHeader style={{display: 'block'}}>
-                  <span style={{float: 'right'}} onClick={()=>this.modalInsertar()}>x</span>
-                </ModalHeader>
-                <ModalBody>
-                  <div className="form-group">
-                    <label htmlFor="id">Id</label>
-                    <input className="form-control" type="text" name="id" id="id" readOnly onChange={this.handleChange} value={form ? form.id : this.state.data.length + 1}/>
-                    <br />
-                    <label htmlFor="nombre">Estado</label>
-                    <input className="form-control" type="text" name="estado" id="estado" onChange={this.handleChange} value={form ? form.estado:''}/>
-                    <br />
-                    <label htmlFor="nombre">Fecha Inicial</label>
-                    <input className="form-control" type="text" name="fechainicio" id="fechainicio" onChange={this.handleChange} value={form ? form.fechainicio:''}/>
-                    <br />
-                    <label htmlFor="nombre">Fecha Final</label>
-                    <input className="form-control" type="text" name="fechafinal" id="fechafinal" onChange={this.handleChange} value={form ? form.fechafinal:''} />
-                  </div>
-                </ModalBody>
+  nav(item, index) {
+    return (
+      <ListGroupItem>
+        <Row>
+          <Col md={1}>
+            <Label>#</Label>
+            <p><FontAwesomeIcon icon={faGrip} /></p>
+          </Col>
+          <Col md={4}>
+            <FormGroup>
+              <Label htmlFor={index + 1}>Nombre de Área {index + 1}:</Label>
+              <Input type='text' id={index + 1} name={index + 1} defaultValue={item.nombre} />
+            </FormGroup>
+          </Col>
+          <Col md={3}>
+            <FormGroup>
+              <Label>Tipo Encargado:</Label>
+              <Select />
+            </FormGroup>
+          </Col>
+          <Col md={3}>
+            <FormGroup>
+              <Label>Encargado:</Label>
+              <Select />
+            </FormGroup>
+          </Col>
+          <Col md={1}>
+            <Label>Eliminar</Label><br />
+            <Button color='danger'><FontAwesomeIcon icon={faClose} /></Button>
+          </Col>
+        </Row>
+      </ListGroupItem>
+    );
+  }
 
-                <ModalFooter>
-                        {this.state.tipoModal === 'insertar' ?
-                            <button className='btn btn-primary' onClick={() => this.peticionPost()}>
-                                Insertar
-                            </button> : <button className='btn btn-primary' onClick={() => this.peticionPut()}>
-                                Actualizar
-                            </button>
-                        }
-                        <button className='btn btn-danger' onClick={() => this.modalInsertar()}>
-                            Cancelar
-                        </button>
-                    </ModalFooter>
-          </Modal>
 
-        </table>
+  handleRLDDChange(reorderedItems) {
+    this.setState({ items: reorderedItems });
+    console.log(reorderedItems);
+  }
+
+  render() {
+    const header = (
+      <div className="table-header-container">
+        <Button icon="pi pi-plus" label="Expand All" onClick={this.expandAll} className="mr-2" />
+        <Button icon="pi pi-minus" label="Collapse All" onClick={this.collapseAll} />
+      </div>
+    );
+    const { data, dataProducto, dataInsumo, dataUsuario, dataCategoria } = this.state;
+    const toggle = () => this.modalInsertarFabricacion();
+
+    return (
+      <div className="datatable-rowexpansion-demo">
+        <div className="flex justify-content-between align-items-center">
+          <h5 className="m-0 h5">Fabricación</h5>
+          <button className='btn btn-primary' onClick={() => { this.modalInsertarFabricacion() }} ><FontAwesomeIcon icon={faPlus} style={{ "marginRight": "1rem" }} /><span className='menu-title'>Crear</span></button>
+        </div><br />
+        <Toast ref={(el) => this.toast = el} />
+
+        <div className="card">
+          <DataTable value={data} expandedRows={this.state.expandedRows} onRowToggle={(e) => this.setState({ expandedRows: e.data })}
+            onRowExpand={this.onRowExpand} onRowCollapse={this.onRowCollapse} responsiveLayout="stack"
+            rowExpansionTemplate={this.rowExpansionTemplate} dataKey="id" header={header}>
+            <Column expander={this.allowExpansion} style={{ width: '3em' }} />
+            <Column field="name" header="Producto" sortable />
+            <Column header="Imagen" body={this.imageBodyTemplate} />
+            <Column field="fechainicio" header="Fecha de Inicio" sortable />
+          </DataTable>
+        </div>
+        {/* MODAL DE REGISTRAR */}
+        <Modal isOpen={this.state.modalInsertarFabricacion} toggle={() => { toggle(); }} size="xl">
+          <ModalHeader>
+            <span>Agregar Fabricación</span>
+            <button type="button" className="close" onClick={() => { this.modalInsertarFabricacion(); }}>
+              <FontAwesomeIcon icon={faClose} />
+            </button>
+
+          </ModalHeader>
+
+          <ModalBody>
+
+            <FormGroup>
+
+              <Accordion activeIndex={0}>
+                <AccordionTab header="Datos del producto">
+                  <Row>
+                    <Col md={6}>
+                      <Label htmlFor='nombre'>Nombre:</Label>
+                      <Input type='text' name='nombre' id='nombre' />
+                      <FormText>
+                        Nombre del producto.
+                      </FormText>
+                      <FormFeedback>
+                      </FormFeedback>
+                      <Label htmlFor='categoria'>Categoria:</Label>
+                      <br />
+                      <Select isMulti name='categoria' options={dataCategoria} placeholder="Seleccione la categoria" />
+                      <FormText>
+                        Categoria del producto.
+                      </FormText>
+
+                      <br />
+                      <button className='btn btn-primary' onClick={() => { this.setState({ categoria: null }); this.modalInsertarCategoria() }}>
+                        Agregar Categoría
+                      </button>
+                    </Col>
+                    <Col md={6}>
+                      <Label htmlFor='nombre'>Encargado:</Label>
+                      <Select options={dataUsuario} />
+                      <FormText>
+                        Encargado de la fabricación
+                      </FormText>
+                      <FormFeedback>
+                      </FormFeedback>
+                      <Label htmlFor='material'>Insumos para la fabricación:</Label>
+                      <Select isMulti options={dataInsumo} />
+                      <FormText>
+                        Descripción del Insumo.
+                      </FormText>
+                      <FormFeedback>
+                      </FormFeedback>
+
+                    </Col>
+
+                  </Row>
+                </AccordionTab>
+                <AccordionTab header="Áreas de la fabricación">
+                  <Row>
+                    <Col md={12}>
+                      <Label htmlFor='area'>Áreas:</Label>
+                      <FormText>
+                        Áreas de la fabricación, puedes modificar el orden de la las áreas.
+                      </FormText>
+                      <br />
+                      <Col md={6} className="input-group mb-3">
+                        <input type="text" className="form-control" placeholder="Agregar área..." />
+                        <div className="input-group-append">
+                          <Button color="primary">Agregar</Button>
+                        </div>
+                      </Col>
+                      <FormFeedback>
+                      </FormFeedback>
+                      <ListGroup flush>
+                        <div className="card">
+                          <RLDD
+                            items={this.state.items}
+                            itemRenderer={this.nav}
+                            onChange={this.handleRLDDChange}
+                          />
+                        </div>
+                      </ListGroup>
+                    </Col>
+                  </Row>
+                </AccordionTab>
+              </Accordion>
+
+            </FormGroup>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button disabled={this.state.button} color='primary' onClick={() => this.peticionPostInsumo()}>
+              Insertar
+            </Button>
+            <button className='btn btn-danger' onClick={() => { this.modalInsertarFabricacion(); }}>
+              Cancelar
+            </button>
+          </ModalFooter>
+        </Modal>
       </div>
     );
   }
 }
-
-export default Fabricacion;

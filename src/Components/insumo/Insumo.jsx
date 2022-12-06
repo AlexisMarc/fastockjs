@@ -39,13 +39,14 @@ export default class Insumo extends Component {
             modalInsertarInsumo: false,
             modalEditarInsumo: false,
             modalInsertarTipo: false,
+            modalInsertarProveedor: false,
             modalViewInsumo: false,
             insumo: {
                 nombre: '',
                 material: '',
                 proveedor: null,
                 imagen: null,
-                tipo: []
+                tipo: [],
             },
             editInsumo: {
                 id: '',
@@ -53,8 +54,8 @@ export default class Insumo extends Component {
                 material: '',
                 imagen: null,
                 tipo: [],
+                proveedor: null,
                 estado: '',
-                proveedor: '',
                 idProveedor: '',
                 inventario: null,
             },
@@ -62,24 +63,51 @@ export default class Insumo extends Component {
                 nombre: null,
                 material: null,
                 tipo: null,
+                proveedor: null
             },
             validTipo: {
                 nombre: null,
             },
+            validProveedor: {
+                nombre: null,
+                direccion: null, 
+                contacto:null, 
+                telefono: null, 
+                email: null
+            },
             mensaje: {
                 nombre: null,
                 material: null,
-                tipo: null
+                tipo: null,
+                proveedor:null
             },
             mensajeTipo: {
                 nombre: null,
                 tipo: null,
+            },
+            
+            mensajeProveedor: {
+                nombre: null,
+                direccion: null, 
+                contacto:null, 
+                telefono: null, 
+                email: null
             },
             button: true,
             buttonTipo: true,
             tipo: {
                 id: '',
                 nombre: ''
+            },
+            button: true,
+            buttonProveedor: true,
+            proveedor: {
+                id:'',
+                nombre: '',
+                direccion: '', 
+                contacto:'', 
+                telefono: '', 
+                email: ''
             },
             customers: null,
             selectedCustomers: null,
@@ -96,8 +124,6 @@ export default class Insumo extends Component {
         ];
         this.Botones = this.Botones.bind(this);
         this.onGlobalFilterChangeInsumo = this.onGlobalFilterChangeInsumo.bind(this);
-        this.headerTemplate = this.headerTemplate.bind(this);
-        this.itemTemplate = this.itemTemplate.bind(this);
     }
 
     //PETICION GET
@@ -128,6 +154,23 @@ export default class Insumo extends Component {
         })
     }
 
+     //PETICIÓN GET Proveedor
+     peticionGetProveedor = () => {
+        axios.get(baseUrl + 'proveedor/', autorizacion).then(response => {
+            const datos = [];
+
+            response.data.forEach((proveedor) => {
+                const dato = { value: proveedor.id, label: proveedor.nombre }
+                datos.push(dato);
+            })
+
+            this.setState({ dataProveedor: datos });
+        }).catch(error => {
+            console.log(error.message);
+            swal({ title: "ERROR AL CONSULTAR PROVEEDORES", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+    }
+
     //CONVERTIR TIPOS DEL INSUMO
     TiposInsumo = (e) => {
         const datos = [];
@@ -136,6 +179,18 @@ export default class Insumo extends Component {
         });
         return datos;
     }
+
+    //CONVERTIR PROVEEDORES DEL INSUMO
+    ProveedoresInsumo = (e) => {
+        const datos = [];
+        e.forEach((Proveedor) => {
+            datos.push({ value: Proveedor.id, label: Proveedor.nombre });
+        });
+        return datos;
+    }
+
+
+    
 
     //PETICION POST
     peticionPostInsumo = async () => {
@@ -149,8 +204,9 @@ export default class Insumo extends Component {
                 console.log(error.message);
             })
         }
+        console.log(this.state.insumo)
         this.state.insumo.imagen = img;
-
+        console.log( this.state.insumo)
         await axios.post(url, this.state.insumo, autorizacion).then(response => {
             this.modalInsertarInsumo();
             this.peticionGetInsumo();
@@ -173,6 +229,20 @@ export default class Insumo extends Component {
         }).catch(error => {
             console.log(error.message);
             swal({ title: "ERROR AL REGISTRAR TIPO", text: " ", icon: "error", buttons: false, timer: 1500 })
+        })
+
+    }
+    
+    //PETICION POST PROVEEDOR
+    peticionPostProveedor = async () => {
+
+        await axios.post(baseUrl + "proveedor", this.state.proveedor, autorizacion).then(response => {
+            this.modalInsertarProveedor();
+            this.peticionGetProveedor();
+            swal({ title: "Proveedor " + response.data.nombre + " registrado", text: " ", icon: "success", buttons: false, timer: 1500 })
+        }).catch(error => {
+            console.log(error.message);
+            swal({ title: "ERROR AL REGISTRAR PROVEEDOR", text: " ", icon: "error", buttons: false, timer: 1500 })
         })
 
     }
@@ -213,6 +283,15 @@ export default class Insumo extends Component {
         })
     }
 
+    //PASAR CATEGORIA
+    pasarProveedor = (proveedor) => {
+        this.setState({
+            datosProveedor: {
+                nombre: proveedor.nombre,
+            }
+        })
+    }
+
     //PETICIÓN ESTADO
     peticionEstadoInsumo = (insumo) => {
         axios.put(url + 'estado/' + insumo.id, this.state.editInsumo, autorizacion).then(response => {
@@ -243,6 +322,11 @@ export default class Insumo extends Component {
     modalInsertarTipo = () => {
         this.setState({ modalInsertarTipo: !this.state.modalInsertarTipo });
     }
+    //MODAL DE INSERTAR TIPO
+    modalInsertarProveedor = () => {
+        this.setState({ modalInsertarProveedor: !this.state.modalInsertarProveedor });
+    }
+
 
     //MODAL DE EDITAR
     modalEditarInsumo = () => {
@@ -279,6 +363,30 @@ export default class Insumo extends Component {
             }
         })
     }
+    //SELECCIONAR PROVEEDOR PARA EDICIÓN
+    seleccionarProveedor = (proveedor) => {
+        this.setState({
+            editForm: {
+                id: proveedor.id,
+                nombre: proveedor.nombre,
+                contacto: proveedor.contacto,
+                telefono: proveedor.telefono,
+                direccion: proveedor.direccion,
+                email: proveedor.email,
+                estado: proveedor.estado
+            }
+        })
+    }
+    //SELECCIONAR PROVEEDOR PARA EDICIÓN
+    seleccionarTipo = (tipo) => {
+        this.setState({
+            editForm: {
+                id: tipo.id,
+                nombre: tipo.nombre,
+                filtro: tipo.filtro
+            }
+        })
+    }
 
     //PASAR Tipo
     pasarTipo = (Tipo) => {
@@ -290,6 +398,23 @@ export default class Insumo extends Component {
         })
     }
 
+     //PASAR PROVEEDOR
+     pasarProveedor = (Proveedor) => {
+        this.setState({
+            datosProveedor: {
+                nombre: Proveedor.nombre,
+                contacto: Proveedor.contacto,
+                telefono: Proveedor.telefono,
+                direccion: Proveedor.direccion,
+                email: Proveedor.email,
+                estado: Proveedor.estado
+                
+            }
+        })
+    }
+
+    
+
     //INGRESO DE DATOS AL FORM
     handleChangeInsumo = async e => {
         e.persist();
@@ -299,7 +424,8 @@ export default class Insumo extends Component {
             insumo: {
                 ...this.state.insumo,
                 [e.target.name]: e.target.value
-            },
+            }
+                ,
             valid: {
                 ...this.state.valid,
                 [e.target.name]: valid,
@@ -313,35 +439,13 @@ export default class Insumo extends Component {
         console.log(this.state.insumo);
     }
 
-    //BOTON DESABILITADO DE REGISTRAR
-    ValidButton = () => {
-        delete this.state.valid.descripcion;
-        delete this.state.valid.imagen;
-        this.setState({
-            button: this.validacion.ValidButton(this.state.valid),
-        });
-    }
-    //BOTON DESABILITADO DE REGISTRAR
-    ValidButtonTipo = () => {
-        this.setState({
-            buttonTipo: this.validacion.ValidButton(this.state.validTipo),
-        });
-    }
-    //INGRESO DE FILES
-    handleChangeFiles = (e) => {
-        this.setState({
-            files: e.target.files[0],
-        })
-    }
-
-    //INGRESO DE DATOS DE TIPOS AL INSUMO
+    //INGRESO DE DATOS DE TIPOD AL INSUMO
     handleChangeTipo = async (e) => {
 
         const lista = []
         e.forEach((e) => { lista.push(e.value) });
         const valid = this.validacion.valid("tipo", e);
         const mensaje = this.validacion.mensaje("tipo", e);
-        console.log(valid)
         await this.setState({
             insumo: {
                 ...this.state.insumo,
@@ -360,6 +464,84 @@ export default class Insumo extends Component {
 
         console.log(this.state.insumo);
     }
+
+    //INGRESO DE DATOS DE PRODUCTO AL INSUMO
+    handleChangeProveedor = async (e) => {
+        console.log(e)
+        const valid = this.validacion.valid("proveedor", e);
+        const mensaje = this.validacion.mensaje("proveedor", e);
+        await this.setState({
+            insumo: {
+                ...this.state.insumo,
+                proveedor: e.value
+            },
+            valid: {
+                ...this.state.valid,
+                proveedor: valid,
+            },
+            mensaje: {
+                ...this.state.mensaje,
+                proveedor: mensaje,
+            }
+        });
+        this.ValidButton();
+
+        console.log(this.state.insumo);
+    }
+
+    //INGRESO DE DATOS DE ESPECIALIDAD 
+    handleChangeInsertarProveedorp = async (e) => {
+        e.persist();
+        const valid = this.validacion.valid("proveedor", e);
+        const mensaje = this.validacion.mensaje("proveedor", e);
+        await this.setState({
+            proveedor: {
+                ...this.state.proveedor,
+                [e.target.name]: e.target.value
+            }, 
+            validProveedor: {
+                ...this.state.validProveedor,
+                proveedor: valid,
+            },
+            mensajeProveedor: {
+                ...this.state.mensajeProveedor,
+                proveedor: mensaje,
+            }
+            
+        });
+        this.ValidButtonProveedor();
+        console.log(this.state.proveedor);
+    }
+    
+
+    //BOTON DESABILITADO DE REGISTRAR
+    ValidButton = () => {
+        delete this.state.valid.imagen;
+        this.setState({
+            button: this.validacion.ValidButton(this.state.valid),
+        });
+    }
+    //BOTON DESABILITADO DE REGISTRAR
+    ValidButtonTipo = () => {
+        this.setState({
+            buttonTipo: this.validacion.ValidButton(this.state.validTipo),
+        });
+    }
+
+    //BOTON DESABILITADO DE REGISTRAR
+    ValidButtonProveedor = () => {
+        this.setState({
+            buttonProveedor: this.validacion.ValidButton(this.state.validProveedor),
+        });
+    }
+    //INGRESO DE FILES
+    handleChangeFiles = (e) => {
+        this.setState({
+            files: e.target.files[0],
+        })
+    }
+
+
     //INGRESO DE DATOS DE TIPO AL EDITINSUMO
     handleChangeEditTipo = async (e) => {
 
@@ -387,6 +569,31 @@ export default class Insumo extends Component {
         console.log(this.state.editInsumo);
     }
 
+     //INGRESO DE DATOS AL EDITFORM
+     handleChangeEditProveedor = async e => {
+        e.persist();
+        const valid = this.validacion.valid(e.target.name, e.target.value);
+        const mensaje = this.validacion.mensaje(e.target.name, e.target.value);
+        await this.setState({
+            proveedor: {
+                ...this.state.proveedor,
+                [e.target.name]: e.target.value
+            },
+            valid: {
+                ...this.state.valid,
+                [e.target.name]: valid,
+            },
+            mensaje:{
+                ...this.state.mensaje,
+                [e.target.name]: mensaje,
+            },
+        });
+        this.ValidButton();
+        console.log(this.state.proveedor);
+    }
+
+    
+    
     //INGRESO DE DATOS DE Tipo 
     handleChangeInsertarTipo = async (e) => {
         e.persist();
@@ -397,11 +604,11 @@ export default class Insumo extends Component {
                 ...this.state.tipo,
                 [e.target.name]: e.target.value
             },
-            validTipo: {
+            valid: {
                 ...this.state.validTipo,
                 [e.target.name]: valid,
             },
-            mensajeTipo: {
+            mensaje: {
                 ...this.state.mensajeTipo,
                 [e.target.name]: mensaje,
             },
@@ -410,6 +617,7 @@ export default class Insumo extends Component {
 
         console.log(this.state.tipo);
     }
+
 
     //INGRESO DE DATOS AL EDITINSUMO
     handleChangeInsumoEditInsumo = async e => {
@@ -438,6 +646,7 @@ export default class Insumo extends Component {
     componentDidMount() {
         this.peticionGetInsumo();
         this.peticionGetTipo();
+        this.peticionGetProveedor();
     };
 
 
@@ -455,6 +664,13 @@ export default class Insumo extends Component {
     Inventario(Insumo) {
         return <div>
             <h5>{!Insumo.inventario ? <Badge color="primary"> Tiene inventario</Badge> : <Badge color="danger">Sin inventario</Badge>}</h5>
+        </div>;
+    }
+
+    //RENDERIZAR PROVEEDOR
+    Inventario(Insumo) {
+        return <div>
+            <h5>{!Insumo.proveedor ? <Badge color="primary"> Tiene proveedor</Badge> : <Badge color="danger">Sin proveedor</Badge>}</h5>
         </div>;
     }
 
@@ -497,25 +713,6 @@ export default class Insumo extends Component {
             </React.Fragment>
         )
     }
-    //EVENTOS DE SUBIR ARCHIVO
-    headerTemplate(options) {
-        const { className, chooseButton, cancelButton, uploadButton } = options;
-
-        return (
-            <div className={className} style={{ backgroundColor: 'transparent', display: 'flex', alignItems: 'center' }}>
-                {chooseButton}
-                {uploadButton}
-                {cancelButton}
-            </div>
-        );
-    }
-    itemTemplate(file, props) {
-        return (
-            <div style={{ width: '100%' }}>
-                <img alt={file.name} src={file.objectURL} width={"100%"} />
-            </div>
-        )
-    }
     //ARCHIVO
     imageHandler = (e) => {
         this.setState({ button: false, editInsumo: { ...this.state.editInsumo, imagen: null, } });
@@ -530,12 +727,13 @@ export default class Insumo extends Component {
     };
 
     render() {
-        const { editInsumo, data, dataTipos, profileImg } = this.state;
+        const { editInsumo, data, dataTipos, dataProveedor, profileImg } = this.state;
         const header = this.renderHeaderInsumo();
         const toggle = () => this.modalInsertarInsumo();
         const toggle2 = () => this.modalEditarInsumo();
         const toggle3 = () => this.modalViewInsumo();
         const toggle4 = () => this.modalInsertarTipo();
+        const toggle5 = () => this.modalInsertarProveedor();
         return (
             <div className="datatable-doc-demo">
                 <div className="flex justify-content-between align-items-center">
@@ -552,8 +750,8 @@ export default class Insumo extends Component {
                         currentPageReportTemplate="Registro {first} - {last} de {totalRecords} Insumos">
                         <Column header="Imagen" body={this.Imagen} />
                         <Column field="nombre" header="Nombre" />
+                        <Column field='material' header="Material"/>
                         <Column header="Inventario" body={this.Inventario} />
-                        <Column header="Visible" body={this.Visible} />
                         <Column header="Botones" body={this.Botones} />
 
                     </DataTable>
@@ -613,7 +811,26 @@ export default class Insumo extends Component {
                                     </FormFeedback>
                                     <br />
                                     <button className='btn btn-primary' onClick={() => { this.setState({ tipo: null }); this.modalInsertarTipo() }}>
-                                        Agregar Categoría
+                                        Agregar Tipo
+                                    </button>
+                                    <br/>
+                                    <br/>
+                                    <Label htmlFor='Proovedor'>Proveedor:</Label>
+                                    <br />
+                                    <Select className={this.state.valid.proveedor === true ? 'invalid-select2 is-invalid' : ''} options={dataProveedor} name='proveedor' onChange={this.handleChangeProveedor} placeholder="Seleccione los proveedores" />
+                                    <FormText>
+                                        Proveedor del Insumo.
+                                    </FormText>
+                                    <FormFeedback>
+                                        {this.state.valid.proveedor === true ?
+
+                                            this.state.mensajep.proveedor
+
+                                            : ''}
+                                    </FormFeedback>
+                                    <br />
+                                    <button className='btn btn-primary' onClick={() => { this.setState({ proveedor: null }); this.modalInsertarProveedor() }}>
+                                        Agregar Proveedor
                                     </button>
                                 </Col>
                             </Row>
@@ -660,10 +877,13 @@ export default class Insumo extends Component {
                                         Nombre del Insumo.
                                     </FormText>
 
-                                    <Label htmlFor='descripcion'>Descripción:</Label>
-                                    <Input type='textarea' name='descripcion' id='descripcion' placeholder={editInsumo.descripcion ? '' : "Sin Descripción registrada"} onChange={this.handleChangeInsumoEditInsumo} value={editInsumo.descripcion || ''} />
+                                    <Label htmlFor='material'>Material:</Label>
+                                    <Input valid={this.state.valid.material == null ? false : !this.state.valid.material} invalid={this.state.valid.material} type='text' name='material' id='material' onChange={this.handleChangeInsumoEditInsumo} value={editInsumo.material || ''} />
+                                    <FormFeedback>
+                                        {this.state.mensaje.material}
+                                    </FormFeedback>
                                     <FormText>
-                                        Descripción del Insumo.
+                                        Material del Insumo.
                                     </FormText>
                                     <Label htmlFor='Tipo'>Tipo:</Label>
                                     <br />
@@ -680,7 +900,26 @@ export default class Insumo extends Component {
                                     </FormFeedback>
                                     <br />
                                     <button className='btn btn-primary' onClick={() => { this.setState({ tipo: null }); this.modalInsertarTipo() }}>
-                                        Agregar Categoría
+                                        Agregar Tipo
+                                    </button>
+                                    <br/>
+                                    <br/>
+                                    <Label htmlFor='Tipo'>Proveedor:</Label>
+                                    <br />
+                                    <Select className={this.state.valid.proveedor === true ? 'invalid-select2 is-invalid' : ''} options={dataProveedor} name='Proveedor' defaultValue={this.ProveedoresInsumo(editInsumo.tipo)} onChange={this.handleChangeEditProveedor} placeholder="Seleccione los proveedores" />
+                                    <FormText>
+                                        Proveedor del Insumo.
+                                    </FormText>
+                                    <FormFeedback>
+                                        {this.state.valid.proveedor === true ?
+
+                                            this.state.mensaje.proveedor
+
+                                            : ''}
+                                    </FormFeedback>
+                                    <br />
+                                    <button className='btn btn-primary' onClick={() => { this.setState({ proveedor: null }); this.modalInsertarProveedor() }}>
+                                        Agregar Proveedor
                                     </button>
                                 </Col>
                             </Row>
@@ -725,8 +964,11 @@ export default class Insumo extends Component {
                                             <p>Proveedor:</p> <h5>{editInsumo.proveedor ? editInsumo.proveedor : <Badge color="secondary">Sin proveedor</Badge>}</h5>
                                         </ListGroupItem>
                                         <ListGroupItem>
-                                            <p>Inventario:</p> {!editInsumo.inventario ? <Badge color="primary"> Tiene inventario</Badge> : <Badge color="danger">Sin inventario</Badge>}
+                                            <p>Material:</p> <h5>{editInsumo.material}</h5>
                                         </ListGroupItem>
+                                        {/* <ListGroupItem>
+                                            <p>Inventario:</p> {!editInsumo.inventario ? <Badge color="primary"> Tiene inventario</Badge> : <Badge color="danger">Sin inventario</Badge>}
+                                        </ListGroupItem> */}
                                         <ListGroupItem>
                                             <p>Tipo:</p>
                                             <ListGroup>
@@ -745,11 +987,8 @@ export default class Insumo extends Component {
                                                 }
                                             </ListGroup>
                                         </ListGroupItem>
-
-
                                     </ListGroup>
                                 </Col>
-
                             </Row>
 
                         </FormGroup>
@@ -776,12 +1015,12 @@ export default class Insumo extends Component {
                             <Row>
                                 <Col md={12}>
                                     <Label htmlFor='nombre'>Nombre:</Label>
-                                    <Input valid={this.state.validTipo.nombre == null ? false : !this.state.validTipo.nombre} invalid={this.state.validTipo.nombre} type='text' name='nombre' id='nombre' onChange={this.handleChangeInsertarTipo} />
+                                    <Input valid={this.state.valid.nombre == null ? false : !this.state.valid.nombre} invalid={this.state.valid.nombre} type='text' name='nombre' id='nombre' onChange={this.handleChangeInsertarTipo} />
                                     <FormText>
                                         Nombre del Insumo.
                                     </FormText>
                                     <FormFeedback>
-                                        {this.state.mensajeTipo.nombre}
+                                        {this.state.mensaje.nombre}
                                     </FormFeedback>
                                 </Col>
                             </Row>
@@ -789,10 +1028,97 @@ export default class Insumo extends Component {
                     </ModalBody>
 
                     <ModalFooter>
-                        <Button disabled={this.state.buttonTipo} color='primary' onClick={() => this.peticionPostTipo()}>
+                    <button className='btn btn-primary' onClick={() => this.peticionPostTipo()}>
+                            Insertar
+                        </button>
+                        <button className='btn btn-danger' onClick={() => { this.modalInsertarTipo(); }}>
+                            Cancelar
+                        </button>
+                    </ModalFooter>
+                </Modal>
+
+                     {/* MODAL DE REGISTRAR */}
+                <Modal isOpen={this.state.modalInsertarProveedor} toggle={toggle5} size='lg'>
+                    <ModalHeader toggle={toggle5}>
+                        <span>Agregar Proveedor</span>
+                        <button type="button" className="close" onClick={() => this.modalInsertarProveedor()}>
+                            <FontAwesomeIcon icon={faClose} />
+                        </button>
+
+                    </ModalHeader>
+
+                    <ModalBody>
+
+                        <FormGroup>
+                            <Row>
+                                <Col md={6}>
+                                    <Label htmlFor='nombre'>Nombre:</Label>
+                                    <Input  valid={this.state.validProveedor.nombre == null ? false : !this.state.validProveedor.nombre} invalid={this.state.validProveedor.nombre} type='text' name='nombre' id='nombre' onChange={this.handleChangeInsertarProveedorp} />
+                                    <FormText>
+                                            Nombre
+                                    </FormText>
+                                    <FormFeedback>
+                                    {this.state.mensajeProveedor.nombre}
+                                    </FormFeedback>
+                                </Col>
+                                <Col md={6}>
+                                    <Label htmlFor='contacto'>Contacto:</Label>
+                                    <Input valid={this.state.validProveedor.contacto == null ? false : !this.state.validProveedor.contacto} invalid={this.state.validProveedor.contacto} type='text' name='contacto' id='contacto' onChange={this.handleChangeInsertarProveedorp} />
+                                    <FormText>
+                                        Contacto
+                                    </FormText>
+                                    <FormFeedback>
+                                    {this.state.mensajeProveedor.contacto}
+                                    </FormFeedback>
+                                </Col>
+                            </Row>
+                        </FormGroup>
+
+                        <FormGroup>
+                            <Row>
+                                <Col md={6}>
+                                    <Label htmlFor='direccion'>Dirección:</Label>
+                                    <Input valid={this.state.validProveedor.direccion == null ? false : !this.state.validProveedor.direccion} invalid={this.state.validProveedor.direccion} type='text' name='direccion' id='direccion' onChange={this.handleChangeInsertarProveedorp} />
+                                    <FormText>
+                                        Direccion
+                                    </FormText>
+                                    <FormFeedback>
+                                    {this.state.mensajeProveedor.direccion}
+                                    </FormFeedback>
+                                </Col>
+                                <Col md={6}>
+                                    <Label htmlFor='telefono'>Teléfono:</Label>
+                                    <Input valid={this.state.validProveedor.telefono == null ? false : !this.state.validProveedor.telefono} invalid={this.state.validProveedor.telefono} type='number' name='telefono' id='telefono' onChange={this.handleChangeInsertarProveedorp} />
+                                    <FormText>
+                                        Telefono
+                                    </FormText>
+                                    <FormFeedback>
+                                    {this.state.mensajeProveedor.telefono}
+                                    </FormFeedback>
+                                </Col>
+                            </Row>
+                        </FormGroup>
+                        <FormGroup>
+                            <Row>
+                                <Col md={12}>
+                                    <Label htmlFor='email'>Email:</Label>
+                                    <Input valid={this.state.validProveedor.email == null ? false : !this.state.validProveedor.email} invalid={this.state.validProveedor.email} type='email' name='email' id='email' onChange={this.handleChangeInsertarProveedorp} />
+                                    <FormText>
+                                        Email
+                                    </FormText>
+                                    <FormFeedback>
+                                    {this.state.mensajeProveedor.email}
+                                    </FormFeedback>
+                                </Col>
+                            </Row>
+                        </FormGroup>
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <Button color='primary' onClick={() => this.peticionPostProveedor()}>
                             Insertar
                         </Button>
-                        <button className='btn btn-danger' onClick={() => { this.modalInsertarTipo(); }}>
+                        <button className='btn btn-danger' onClick={() => this.modalInsertarProveedor()}>
                             Cancelar
                         </button>
                     </ModalFooter>

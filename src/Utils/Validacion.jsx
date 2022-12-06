@@ -41,6 +41,13 @@ export default class Validacion {
         if (name === "categoria" || name === "tipo") {
             return this.validArray(value);
         }
+        if (name === "proveedor"){
+            if (value === '') {
+                return true;
+            } else{
+                return false;
+            }
+        }
     }
     mensaje = (name, value) => {
         let texto = /^[A-Za-zÑñÁáÉéÍíÓóÚúÜü\s]+$/;
@@ -95,6 +102,13 @@ export default class Validacion {
         if (name === "categoria" || name === "tipo") {
             if (this.validArray(value)) {
                 return "Complete el campo";
+            }
+        }
+        if (name === "proveedor"){
+            if (value === '') {
+                return "Complete el campo";
+            } else{
+                return false;
             }
         }
     }

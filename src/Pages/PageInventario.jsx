@@ -3,7 +3,7 @@ import Menu from "../layouts/menu/Menu";
 import Panel from "../layouts/panel/Panel";
 import Nav from '../layouts/nav/Nav';
 import Color from "../layouts/color/Color";
-import Inventario from "../Components/inventario/insumo/Inventario";
+import Inventario from "../Components/inventario/Inventario";
 
 function PageInventario() {
     return (
@@ -28,7 +28,7 @@ function PageInventario() {
                                         <div id="detailedReports"
                                             className="carousel slide detailed-report-carousel position-static pt-2"
                                             data-ride="carousel">
-                                                <Inventario/>
+                                                <Inventario />
                                         </div>
                                     </div>
                                 </div>

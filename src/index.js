@@ -7,12 +7,12 @@ import Login from './Components/Public/Login';
 import Prueba from './Pages/Prueba';
 import PageProveedor from './Pages/PageProveedor';
 import PageUsuario from './Pages/PageUsuario';
-import PageInventarioPro from './Pages/PageInventarioPro';
 import PageInventario from './Pages/PageInventario';
 import PageInsumo from './Pages/PagesInsumo';
 import PageEmpresa from './Pages/PageEmpresa';
 import PageProducto from './Pages/PageProducto';
 import PageFabricacion from './Pages/PagesFabricacion';
+import App from './App.tsx';
 // import Slider1 from '../public/home/slider1/Slider1';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -27,8 +27,7 @@ root.render(
         <Route path='fabricacion' element={<PageFabricacion />} />
         <Route path='/producto' element={<PageProducto />} />
         <Route path='/inventario' element={<PageInventario />} />
-        <Route path='/inventariopro' element={<PageInventarioPro />} />
-        <Route path='/prueba' element={<PageInsumo />} />
+        <Route path='/prueba' element={<App />} />
         <Route path='*' element={<Error/>} />
       </Routes>
     </BrowserRouter>

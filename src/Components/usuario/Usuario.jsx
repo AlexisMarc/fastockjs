@@ -39,9 +39,9 @@ export default class Usuario extends Component {
     })
   }
 
-  //PETICIÓN GET CATEGORIA
-  peticionGetCargos = () => {
-    axios.get(url + 'cargos/', autorizacion).then(response => {
+  //PETICIÓN GET Cargo
+  peticionGetCargo = () => {
+    axios.get(url + 'cargo/', autorizacion).then(response => {
       const datos = [];
 
       response.data.map((cargo) => {
@@ -60,7 +60,7 @@ export default class Usuario extends Component {
   //PETICIÓN POST
   peticionPostUsuario = async () => {
 
-    await axios.post(url, this.state.usuario, autorizacion).then(response => {
+    await axios.post(baseUrl, this.state.usuario, autorizacion).then(response => {
       this.modalInsertarUsuario();
       this.peticionGetUsuario();
 
@@ -70,7 +70,19 @@ export default class Usuario extends Component {
     })
 
   }
+//PETICIÓN POST
+peticionPostCargo = async () => {
 
+  await axios.post(baseUrl, "cargo", this.state.cargo, autorizacion).then(response => {
+    this.modalInsertarCargo();
+    this.peticionGetCargo();
+
+  }).catch(error => {
+    console.log(error.message);
+    swal({ title: "ERROR AL REGISTRAR", text: " ", icon: "error", buttons: false, timer: 1500 })
+  })
+
+}
   //PETICIÓN PUT
   peticionPutUsuario = () => {
     axios.put(url + this.state.editUsuario.id, this.state.editUsuario, autorizacion).then(response => {
@@ -104,6 +116,10 @@ export default class Usuario extends Component {
   modalInsertarUsuario = () => {
     this.setState({ modalInsertarUsuario: !this.state.modalInsertarUsuario })
   }
+  //MODAL DE INSERTAR Cargo
+  modalInsertarCargo = () => {
+    this.setState({ modalInsertarCargo: !this.state.modalInsertarCargo });
+}
 
   //MODAL DE VIEW
   modalViewUsuario = () => {
@@ -127,7 +143,7 @@ export default class Usuario extends Component {
         direccion: usuario.direccion,
         telefono: usuario.telefono,
         email: usuario.email,
-        cargo: usuario.cargo,
+        cargo: usuario.cargo
 
       }
     })
@@ -168,6 +184,7 @@ export default class Usuario extends Component {
   //FUNCION DE ARRANQUE
   componentDidMount() {
     this.peticionGetUsuario();
+    this.peticionGetCargo();
   }
 
   //CONSTRUCTOR
@@ -280,8 +297,8 @@ export default class Usuario extends Component {
     const toggle = () => this.modalInsertarUsuario();
     const toggle2 = () => this.modalEditarUsuario();
     const toggle3 = () => this.modalViewUsuario();
-    const cargo = () => this.setState({ cargo: !this.state.cargo });
-    const modelcargo = () => this.setState({ modelcargo: !this.state.modelcargo });
+    const toggle4 = () => this.modalInsertarCargo();
+    const modalInsertarCargo = () => this.setState({ modelcargo: !this.state.modelcargo });
 
     return (
       <div className="datatable-doc-demo">
@@ -347,7 +364,7 @@ export default class Usuario extends Component {
                     Complete el campo
                   </FormFeedback>
                   <Label htmlFor="genero">Genero</Label>
-                  <Select options={dataUsuarios} isMulti name='usuario' onChange={this.handleChangeUsuario} placeholder="Seleccione el tipo de identificación" />
+                  <Select options={dataUsuarios} isMulti name='usuario' onChange={this.handleChangeUsuario} placeholder="Seleccione el tipo de Genero" />
                   <FormFeedback>
                     Complete el campo
                   </FormFeedback>
@@ -356,7 +373,6 @@ export default class Usuario extends Component {
                   <FormFeedback>
                     Complete el campo
                   </FormFeedback>
-
                 </Col>
                 <Col md={6}>
                   <Label htmlFor='imagen'>Imagen:</Label>
@@ -400,6 +416,39 @@ export default class Usuario extends Component {
             </button>
           </ModalFooter>
         </Modal>
+
+         {/* MODAL DE CARGO */}
+            <Modal isOpen={this.state.modalInsertarCargo} toggle={toggle4} size="sm" >
+                    <ModalHeader>
+                        <span>Agregar Cargo</span>
+                        <button type="button" className="close" onClick={() => { this.setState({ profileImg: this.state.nombre }); this.modalInsertarCargo()}} >
+                            <FontAwesomeIcon icon={faClose} />
+                        </button>
+                    </ModalHeader>
+
+                    <ModalBody>
+                        <FormGroup>
+                            <Row>
+                                <Col md={12}>
+                                    <Label htmlFor='nombre'>Nombre:</Label>
+                                    <Input invalid type='text' name='nombre' id='nombre' onChange={this.handleChangeEmpresa}/>
+                                    <FormFeedback>
+                                        Nombre empresa
+                                    </FormFeedback>
+                                </Col> 
+                            </Row>
+                        </FormGroup>
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <Button disabled={this.state.buttonCargo} color='primary' onClick={() => this.peticionPostCargo()}>
+                            Insertar
+                        </Button>
+                        <button className='btn btn-danger' onClick={() => { this.modalInsertarCargo(); }}>
+                            Cancelar
+                        </button>
+                    </ModalFooter>
+                </Modal> 
 
         {/* MODAL DE EDITAR */}
         <Modal isOpen={this.state.modalEditarUsuario} toggle={toggle2} size='lg'>
@@ -495,8 +544,7 @@ export default class Usuario extends Component {
 
 
         {/* MODAL DE VISTA */}
-
-        <Modal isOpen={this.state.modalViewUsuario} toggle={() => { this.setState({ datacargos: [], cargo: false }); toggle3(); }}>
+        <Modal isOpen={this.state.modalViewUsuario} toggle={toggle3}>
           <ModalHeader >
             <div><br /><h3>Usuario {editUsuario.nombre}</h3></div>
             <button type="button" className="close" onClick={() => { this.modalViewUsuario(); this.setState({ datacargos: [], cargo: false }) }}>
@@ -515,7 +563,7 @@ export default class Usuario extends Component {
                       }
                     </ListGroupItem>
                     <ListGroupItem>
-                      <p>Tipo identificación:</p> <h5>{editUsuario.tipo} {editUsuario.identificacion}</h5>
+                      <p>Tipo identificación:</p> <h5>{editUsuario.identificacion}</h5>
                     </ListGroupItem>
                     <ListGroupItem>
                       <p>Nombre:</p> <h5>{editUsuario.nombre} {editUsuario.apellido}</h5>
@@ -536,7 +584,7 @@ export default class Usuario extends Component {
                       <p>Email:</p> <h5>{editUsuario.email}</h5>
                     </ListGroupItem>
                     <ListGroupItem>
-                      <p>cargo:</p>
+                      <p>cargo:</p> <h5>{editUsuario.cargo}</h5>
                       <ListGroup>
                         {editUsuario.cargo.length > 0 ?
                           editUsuario.cargo.map((cargo, index) => {
@@ -567,6 +615,8 @@ export default class Usuario extends Component {
             </button>
           </ModalFooter>
         </Modal>
+        {/* MODAL DE CARGO */}
+        
       </div >
     );
   }

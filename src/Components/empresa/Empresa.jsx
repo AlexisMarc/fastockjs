@@ -5,6 +5,7 @@ import { faEdit, faTrashAlt, faClose } from '@fortawesome/free-solid-svg-icons';
 import { autorizacion, baseUrl, autorizacionFiles } from '../../Utils/Api';
 import { FilterMatchMode, FilterOperator } from 'primereact/api';
 import { faEye, faPlus } from '@fortawesome/free-solid-svg-icons';
+import Validacion from '../../Utils/Validacion';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Alert, Badge, Button, Collapse, ListGroup, ListGroupItem } from 'reactstrap';
@@ -23,7 +24,8 @@ const url = baseUrl + "empresa/";
 
 
 export default class Empresa extends Component {
-
+    
+    validacion = new Validacion();
     //DATOS
     state = {}
     //PETICIÓN GET
@@ -39,7 +41,7 @@ export default class Empresa extends Component {
     }
     //PETICIÓN GET ESPECIALIDAD
     peticionGetEspecialidad = () => {
-        axios.get(url + 'especialidad/' + autorizacion).then(response => {
+        axios.get(url + 'especialidad/' , autorizacion).then(response => {
             const datos = [];
             response.data.map((especialidad) => {
                 const dato = { value: especialidad.id, label: especialidad.nombre }
@@ -50,6 +52,14 @@ export default class Empresa extends Component {
             console.log(error.message);
             swal({ title: "ERROR AL CONSULTAR ESPECIALIDAD", text: " ", icon: "error", buttons: false, timer: 1500 })
         })
+    }
+     //CONVERTIR ESPECIALIDAD DEL EMPRESA
+    especialidadEmpresa = (e) => {
+        const datos = [];
+        e.forEach((empresa) => {
+            datos.push({ value: empresa.id, label: empresa.nombre });
+        });
+        return datos;
     }
     //PETICIÓN POST
     peticionPostEmpresa = async () => {
@@ -69,7 +79,7 @@ export default class Empresa extends Component {
         await axios.post(url, this.state.empresa, autorizacion).then(response => {
             this.modalInsertarEmpresa();
             this.peticionGetEmpresa();
-
+            swal({ title: " Empresa " + response.data.nombre + " registrado", text: " ", icon: "success", buttons: false, timer: 1500 })
 
         }).catch(error => {
             console.log(error.message);
@@ -82,18 +92,57 @@ export default class Empresa extends Component {
         await axios.post(url + "especialidad", this.state.especialidad, autorizacion).then(response => {
             this.modalInsertarEspecialidad();
             this.peticionGetEspecialidad();
-
+            swal({ title: "Especialidad " + response.data.nombre + " registrado", text: " ", icon: "success", buttons: false, timer: 1500 })
         }).catch(error => {
             console.log(error.message);
+            swal({ title: "ERROR AL REGISTRAR ESPECIALIDAD", text: " ", icon: "error", buttons: false, timer: 1500 })
         })
 
     }
     //PETICIÓN PUT
-    peticionPutEmpresa = () => {
-        axios.put(url + this.state.editEmpresa.id, this.state.editEmpresa, autorizacion).then(response => {
-            this.modalEditarEmpresa();
+    // peticionPutEmpresa = () => {
+    //     var img = this.state.editEmpresa.imagen;
+    //     axios.put(url + this.state.editEmpresa.id, this.state.editEmpresa, autorizacion).then(response => {
+    //         this.modalEditarEmpresa();
+    //         this.peticionGetEmpresa();
+    //         swal({ title: "Empresa " + response.data.nombre + " editado", text: " ", icon: "success", buttons: false, timer: 1500 })
+    //     }).catch(error => {
+    //         console.log(error.message);
+    //         swal({ title: "ERROR AL EDITAR", text: " ", icon: "error", buttons: false, timer: 1500 })
+    //     })
+    // }
+    peticionPutEmpresa = async () => {
+        var img = this.state.editEmpresa.imagen;
+        if (this.state.files != null) {
+            var bodyFormData = new FormData();
+            bodyFormData.append('files', this.state.files);
+            await axios.post(baseUrl + "files/upload", bodyFormData, autorizacionFiles).then(response => {
+                img = response.data.message;
+            }).catch(error => {
+                console.log(error.message);
+            })
+        }
+        this.state.editEmpresa.imagen = img;
+        const lista = [];
+        this.state.editEmpresa.especialidad.forEach((e) => {
+            if (e.id != null) {
+                lista.push(e.id)
+            } else {
+                lista.push(e)
+            }
+        });
+        this.state.editEmpresa.especialidad = lista;
+
+        // delete this.state.editEmpresa.inventario;
+        console.log(this.state.editEmpresa)
+        await axios.put(baseUrl + this.state.editEmpresa.id, this.state.editEmpresa, autorizacion).then(response => {
             this.peticionGetEmpresa();
+            this.modalEditarEmpresa();
+
             swal({ title: "Empresa " + response.data.nombre + " editado", text: " ", icon: "success", buttons: false, timer: 1500 })
+        }).catch(error => {
+            console.log(error.message);
+            swal({ title: "ERROR AL EDITAR", text: " ", icon: "error", buttons: false, timer: 1500 })
         })
     }
 
@@ -114,7 +163,18 @@ export default class Empresa extends Component {
     }
     //MODAL DE EDITAR
     modalEditarEmpresa = () => {
-        this.setState({ modalEditarEmpresa: !this.state.modalEditarEmpresa });
+        this.setState({ modalEditarEmpresa: !this.state.modalEditarEmpresa,
+            valid: {
+                nombre: false,
+                contacto: false,
+                telefono: false,
+                direccion: false,
+                email: false,
+                especialidad: false,
+                estado: false
+            },
+            button: true,
+        });
     }
     //MODAL DE INSERTAR ESPECIALIDAD
     modalInsertarEspecialidad = () => {
@@ -142,7 +202,7 @@ export default class Empresa extends Component {
     //PASAR ESPECIALIDAD
     pasarEspecialidad = (especialidad) => {
         this.setState({
-            datosespecialidad: {
+            especialidad: {
                 nombre: especialidad.nombre,
                 descripcion: especialidad.descripcion
             }
@@ -158,13 +218,10 @@ export default class Empresa extends Component {
     //INGRESO DE DATOS DE ESPECIALIDAD A LA EMPRESA
     handleChangeEspecialidad = async (e) => {
 
-        const lista = []
-        e.map((e) => { lista.push(e.value) });
-
         await this.setState({
             empresa: {
                 ...this.state.empresa,
-                especialidad: lista
+                especialidad: e.value 
             }
         });
 
@@ -193,21 +250,33 @@ export default class Empresa extends Component {
         });
         console.log(this.state.empresa);
     }
-    //INGRESO DE DATOS AL EDITEmpresa
-
+    //INGRESO DE DATOS AL EDITEMPRESA
     handleChangeEditEmpresa = async e => {
         e.persist();
+        const valid = this.validacion.valid(e.target.name, e.target.value);
+        const mensaje = this.validacion.mensaje(e.target.name, e.target.value);
         await this.setState({
             editEmpresa: {
                 ...this.state.editEmpresa,
                 [e.target.name]: e.target.value
-            }
+            },
+            valid: {
+                ...this.state.valid,
+                [e.target.name]: valid,
+            },
+            mensaje:{
+                ...this.state.mensaje,
+                [e.target.name]: mensaje,
+            },
         });
-        console.log(this.state.editEmpresa);
+        this.ValidButton();
     }
+
+    
     //FUNCION DE ARRANQUE
     componentDidMount() {
         this.peticionGetEmpresa();
+        this.peticionGetEspecialidad();
     }
     constructor(props) {
         super(props);
@@ -215,6 +284,7 @@ export default class Empresa extends Component {
             img: baseUrl + "files/error.png",
             profileImg: baseUrl + "files/error.png",
             data: [],
+            dataespecialidad: [],
             files: null,
             modalInsertarEmpresa: false,
             modalEditarEmpresa: false,
@@ -241,8 +311,8 @@ export default class Empresa extends Component {
                 estado: ''
             },
             especialidad: {
-                id: '',
-                nombre: ''
+                nombre: '', 
+                descripcion:''
             },
 
             customers: null,
@@ -258,6 +328,14 @@ export default class Empresa extends Component {
         this.headerTemplate = this.headerTemplate.bind(this);
         this.itemTemplate = this.itemTemplate.bind(this);
     }
+    ValidButton = () => {
+        delete this.state.valid.descripcion;
+        delete this.state.valid.imagen;
+        this.setState({
+            button: this.validacion.ValidButton(this.state.valid),
+        });
+    }
+    
     //RENDERIZAR IMAGEN
     Imagen(EmpresaeditEmpresa) {
         return <div >
@@ -348,8 +426,8 @@ export default class Empresa extends Component {
                         dataKey="id" selection={this.state.selectedCustomers} onSelectionChange={e => this.setState({ selectedCustomers: e.value })}
                         filters={this.state.filters} loading={this.state.loading}
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                        breakpoint="800px" paginator rows={10} rowsPerPageOptions={[10, 25, 50]} emptyMessage="Preveedores no encontrados..."
-                        currentPageReportTemplate="Registro {first} - {last} de {totalRecords} empresaes">
+                        breakpoint="800px" paginator rows={10} rowsPerPageOptions={[10, 25, 50]} emptyMessage="Empresas no encontradas..."
+                        currentPageReportTemplate="Registro {first} - {last} de {totalRecords} empresas">
                         <Column header="Imagen" body={this.Imagen} />
                         <Column field="nombre" header="Nombre" />
                         <Column field="contacto" header="Contacto" />
@@ -378,12 +456,12 @@ export default class Empresa extends Component {
                                     <img src={profileImg} alt="cargado" style={{ "width": "100%", "borderRadius": "0px 0px 10px 10px", "padding": "20px 20px 0px 20px" }} />
                                     <Label htmlFor='especialidad'>especialidad:</Label>
                                     <br />
-                                    <Select options={dataespecialidad} isMulti name='especialidad' onChange={this.handleChangeEspecialidad} placeholder="Seleccione la especialidad" />
+                                    <Select options={dataespecialidad} name='especialidad' onChange={this.handleChangeEspecialidad} placeholder="Seleccione la especialidad" />
                                     <FormText>
                                         especialidad del empresa.
                                     </FormText>
                                     <FormFeedback>
-                                        Complete inventarioel campo
+                                        Complete el campo
                                     </FormFeedback>
                                     <br />
                                     <button className='btn btn-primary' onClick={() => { this.setState({ especialidad: null }); this.modalInsertarEspecialidad() }}>
@@ -399,23 +477,23 @@ export default class Empresa extends Component {
                                     <FormFeedback>
                                         Complete el campo
                                     </FormFeedback>
-                                    <Label htmlFor='descripcion'>Contato:</Label>
-                                    <Input invalid type='text' name='descripcion' id='descripcion' onChange={this.handleChangeEmpresa} />
+                                    <Label htmlFor='contacto'>Contato:</Label>
+                                    <Input invalid type='text' name='contacto' id='contacto' onChange={this.handleChangeEmpresa} />
                                     <FormText>
                                         Descripción del empresa.
                                     </FormText>
-                                    <Label htmlFor='descripcion'>Telefono:</Label>
-                                    <Input invalid type='number' name='descripcion' id='descripcion' onChange={this.handleChangeEmpresa} />
+                                    <Label htmlFor='telefono'>Telefono:</Label>
+                                    <Input invalid type='number' name='telefono' id='telefono' onChange={this.handleChangeEmpresa} />
                                     <FormText>
                                         Descripción del empresa.
                                     </FormText>
-                                    <Label htmlFor='descripcion'>Direccion:</Label>
-                                    <Input invalid type='text' name='descripcion' id='descripcion' onChange={this.handleChangeEmpresa} />
+                                    <Label htmlFor='direccion'>Direccion:</Label>
+                                    <Input invalid type='text' name='direccion' id='direccion' onChange={this.handleChangeEmpresa} />
                                     <FormText>
                                         Descripción del empresa.
                                     </FormText>
-                                    <Label htmlFor='descripcion'>Email:</Label>
-                                    <Input invalid type='email' name='descripcion' id='descripcion' onChange={this.handleChangeEmpresa} />
+                                    <Label htmlFor='email'>Email:</Label>
+                                    <Input invalid type='email' name='email' id='email' onChange={this.handleChangeEmpresa} />
                                     <FormText>
                                         Descripción del empresa.
                                     </FormText>
@@ -457,15 +535,11 @@ export default class Empresa extends Component {
                                 <Col md={6}>
                                     <Label htmlFor='nombre'>Nombre:</Label>
                                     <Input invalid type='text' name='nombre' id='nombre' onChange={this.handleChangeEditEmpresa} value={editEmpresa.nombre || ''} />
-                                    <FormText>
-                                        Nombre del empresa.
-                                    </FormText>
                                     <FormFeedback>
-                                        Complete el campo
+                                    
                                     </FormFeedback>
-                                    <Label htmlFor='descripcion'>Contato:</Label>
-                                    <Input type='textarea' name='descripcion' id='descripcion' onChange={this.handleChangeEditEmpresa} value={editEmpresa.contacto || ''} />
-                                    <FormText>
+                                    <Label htmlFor='contacto'>Contato:</Label>
+                                    <Input type='textarea' name='contacto' id='contacto' onChange={this.handleChangeEditEmpresa} value={editEmpresa.contacto || ''} />                                    <FormText>
                                         Descripción del empresa.
                                     </FormText>
                                     <Label htmlFor='telefono'>Telefono:</Label>
@@ -494,18 +568,18 @@ export default class Empresa extends Component {
                                         especialidad del empresa.
                                     </FormText>
                                     <FormFeedback>
-                                        Complete inventarioel campo
+                                        Complet el campo
                                     </FormFeedback>
                                     <br />
-                                    <button className='btn btn-primary' onClick={() => { this.setState({ especialidad: null }); this.modalInsertarespecialidad() }}>
-                                        Agregar Categoría
-                                    </button>
+                                    <Button disabled={this.state.button} color='primary' onClick={() => this.peticionPostEspecialidad()}>
+                                        Insertar Especialidad
+                                    </Button>
                                 </Col>
                             </Row>
                         </FormGroup>
                     </ModalBody>
                     <ModalFooter>
-                        <button className='btn btn-primary' onClick={() => this.peticionPutEmpresa()}>
+                        <button  color='primary'  onClick={() => this.peticionPutEmpresa()}>
                             Actualizar
                         </button>
                         <button className='btn btn-danger' onClick={() => this.modalEditarEmpresa()}>
@@ -549,8 +623,8 @@ export default class Empresa extends Component {
                                         </ListGroupItem>
                                         <ListGroupItem>
                                             <p>Especialidad:</p> <h5>{editEmpresa.especialidad}</h5>
-                                            
                                         </ListGroupItem>
+                                        
                                     </ListGroup>
                                 </Col>
 
@@ -559,7 +633,7 @@ export default class Empresa extends Component {
                     </ModalBody>
 
                     <ModalFooter>
-                        <button className='btn btn-primary' onClick={() => { this.modalViewProducto(); }}>
+                        <button className='btn btn-primary' onClick={() => { this.modalViewEmpresa(); }}>
                             Cerrar
                         </button>
                     </ModalFooter>
@@ -580,7 +654,15 @@ export default class Empresa extends Component {
                                     <Label htmlFor='nombre'>Nombre:</Label>
                                     <Input invalid type='text' name='nombre' id='nombre' onChange={this.handleChangeInsertarEspecialidad} />
                                     <FormText>
-                                        Nombre del producto.
+                                        Nombre de la especialidad.
+                                    </FormText>
+                                    <FormFeedback>
+                                        Complete el campo
+                                    </FormFeedback>
+                                    <Label htmlFor='descripcion'>Descripcion:</Label>
+                                    <Input invalid type='text' name='descripcion' id='descripcion' onChange={this.handleChangeInsertarEspecialidad} />
+                                    <FormText>
+                                        Descripcion.
                                     </FormText>
                                     <FormFeedback>
                                         Complete el campo
